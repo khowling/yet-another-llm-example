@@ -13,33 +13,33 @@ export default function Chat() {
       }
     };
 
-    return (
-    <div>
+    return [
+    
       <div className="p-3">
-        { chatme.map((i) => {
+        { chatme.map((i,idx) => {
           return i.type === "llm" ?
               
-                <div class="flex items-end overflow-auto gap-1">
+                <div key={idx} className="flex items-end overflow-auto gap-1">
                   <div className="avatar placeholder">
-                    <div className="bg-primary text-neutral-content rounded-full w-8">
+                    <div className="text-neutral-content rounded-full w-8">
                       <span>GPT</span>
                     </div>
                   </div> 
 
                   <div className="chat chat-start">
-                    <div className="bg-primary chat-bubble">It's over Anakin, <br/>I have the high ground.</div>
+                    <div className="chat-bubble">It's over Anakin, <br/>I have the high ground.</div>
                   </div>
                 </div>
               :  
-              <div className="chat chat-end">
-                <div className="bg-secondary chat-bubble">You underestimate my power!</div>
+              <div key={idx}  className="chat chat-end">
+                <div className="bg-primary  chat-bubble">You underestimate my power!</div>
               </div>
               
         })}
 
-      </div>
-      <input type="text" placeholder="Type here" className="absolute bottom-0 input input-bordered input-primary w-full " onKeyDown={handleKeyDown}/>
-          
-    </div>
-    )
+      </div>,
+      <div className="flex-end items-center relative">
+        <input type="text" placeholder="Type here" className="input input-bordered input-primary w-full " onKeyDown={handleKeyDown}/>
+        </div>
+    ]
   }

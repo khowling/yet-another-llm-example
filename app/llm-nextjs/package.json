@@ -9,6 +9,10 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@azure/ai-form-recognizer": "^5.0.0",
+    "@azure/identity": "^3.3.0",
+    "@azure/storage-blob": "^12.16.0",
+    "@types/react": "18.2.22",
     "autoprefixer": "^10.4.15",
     "daisyui": "^3.7.6",
     "eslint-config-next": "^13.5.1",
