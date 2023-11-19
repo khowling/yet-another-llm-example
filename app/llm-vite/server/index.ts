@@ -8,7 +8,7 @@ import 'dotenv/config'
 
 import WebSocket, { WebSocketServer } from 'ws';
 
-import { Processor} from "./lib/workflow/processor.js"
+import { Processor, ProcessorOptions} from "./lib/workflow/processor.js"
 import { EventStoreConnection } from "./lib/eventing/eventStoreConnection.js"
 import { StateManager, Reducer, ReducerReturn, Control, ChangeMessage, StateUpdate, StateStoreDefinition, ReducerInfo } from './lib/eventing/stateManager.js'
 import { analyzeDoc } from './lib/docIntel.js'
@@ -23,7 +23,7 @@ export interface IngestFile {
     _id?: number
     filename?: string;
     status?: IngestFileStatus;
-    extractedText?: string
+    analyseDoc?: {tables:string, paragraphs: string, keyValuePairs: string};
 }
 
 export enum IngestFileStatus {
@@ -105,15 +105,29 @@ processor.use(async (ctx, next) => {
     const f : IngestFile = ctx.lastLinkedRes.fileIngester.files.added[0] as IngestFile
     // form recognisor
 
-
     // https://github.com/microsoft/sample-app-aoai-chatGPT/blob/main/scripts/data_utils.py#L360C16-L360C16
-    const extractedText = await analyzeDoc(f.filename as string)
+    const analyseDoc = await analyzeDoc(f.filename as string)
 
     return await next(
         // SimpleAction, to apply using the processor "statePlugin" StateManager in a !single transation! as the processor state
-        { type: ActionType.Update, _id: f._id, doc: { extractedText } as IngestFile  })
+        { type: ActionType.Update, _id: f._id, doc: { analyseDoc } as IngestFile  },
+        { update_ctx: { ingrestId: f._id } } as ProcessorOptions)
+    )
 })
 
+processor.use(async (ctx, next) => {
+
+    const f : IngestFile = await ctx.linkedStore.getValue('fileIngester', 'files', ctx.ingrestId)
+    // form recognisor
+
+    // https://github.com/microsoft/sample-app-aoai-chatGPT/blob/main/scripts/data_utils.py#L360C16-L360C16
+    const analyseDoc = await analyzeDoc(f.filename as string)
+
+    return await next(
+        // SimpleAction, to apply using the processor "statePlugin" StateManager in a !single transation! as the processor state
+        { type: ActionType.Update, _id: f._id, doc: { analyseDoc } as IngestFile  }, 
+        
+})
 
 // ---------------------------------------------------------------- trpc
 

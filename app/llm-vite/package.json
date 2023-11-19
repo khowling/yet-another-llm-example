@@ -13,6 +13,7 @@
   "dependencies": {
     "@azure/ai-form-recognizer": "^5.0.0",
     "@azure/identity": "^3.3.0",
+    "@azure/openai": "^1.0.0-beta.6",
     "@tanstack/react-query": "^4.35.3",
     "@trpc/client": "^10.38.4",
     "@trpc/react-query": "^10.38.4",
