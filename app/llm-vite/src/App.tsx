@@ -1,6 +1,7 @@
 import {useState} from 'react'
 
 import Chat from './components/chat'
+import Page from './components/page'
 import FileList from './components/FileList'
 import FileUpload from './components/FileUpload'
 
@@ -41,14 +42,7 @@ export default function App() {
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-
-
-      
-        <GPT/>
-        
-
-  
-
+        <Page/>
       </QueryClientProvider>
     </trpc.Provider>
   )

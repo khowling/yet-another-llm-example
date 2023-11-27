@@ -10,4 +10,15 @@ module.exports = {
   plugins: [
     require("daisyui")
   ],
+  daisyui: {
+    themes: [
+      { 'light' : {
+        ...require('daisyui/src/theming/themes')['[data-theme=light]'],
+        "--btn-text-case": "lowercase"
+      }}, 
+      { 'dark'  : {
+        ...require('daisyui/src/theming/themes')['[data-theme=dark]'],
+        "--btn-text-case": "lowercase"
+      }}, "cupcake", "business", "corporate"],
+  }
 }
