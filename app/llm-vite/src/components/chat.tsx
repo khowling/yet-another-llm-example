@@ -30,15 +30,17 @@ function ShopLanding() {
 
     <div key={6} className="flex flex-row flex-wrap gap-5 ml-5 px-10 mt-5">
 
-      { [1,2,3].map((i) => 
+      { [{title: "shoes"},{title: "bikes"},{title: "phones"}].map((i) => 
         
         <div className="card bg-base-100 shadow-xl basis-60">
           <figure><img src="https://daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.jpg" alt="Shoes" /></figure>
           <div className="card-body">
-            <h2 className="card-title">Shoes!</h2>
+            <h2 className="card-title">{i.title}</h2>
             <p>If a dog chews shoes whose shoes does he choose?</p>
             <div className="card-actions justify-end">
-              <button className="btn btn-primary">/buy</button>
+              
+              <CommandHelp cmd="/explore" label={i.title} />
+             
             </div>
           </div>
         </div>
@@ -50,8 +52,9 @@ function ShopLanding() {
   ])
 }
 
-function CommandHelp({label}: {label: string}) {
-  return <span className="btn btn-primary min-h-fit h-auto p-2">{label}</span>
+function CommandHelp({cmd, label}: {cmd: string, label: string}) {
+  const cmdOut = <span className={`btn btn-primary min-h-fit h-auto p-${label ? '1' : '2'}`}>{cmd}</span>
+  return label === undefined ? cmdOut : <span className="btn min-h-fit h-auto p-1 border-primary bg-base-100 pr-2">{cmdOut}{label}</span>
 }
 
 function Help({}) {
@@ -71,12 +74,12 @@ function Help({}) {
           
 
           <ul className="list-none list-outside space-y-3">
-            <li><CommandHelp label="/all" />  show all the products we have to offer</li>
-            <li><CommandHelp label="/sale" />   whats on sale</li>
-            <li><CommandHelp label="/me" />   our personally shopper AI will look after you!</li>
+            <li><CommandHelp cmd="/all" />  show all the products we have to offer</li>
+            <li><CommandHelp cmd="/sale" />   whats on sale</li>
+            <li><CommandHelp cmd="/me" />   our personally shopper AI will look after you!</li>
             <li><p className="font-bold">account stuff</p></li>
-            <li><CommandHelp label="/orders" />   show my orders</li>
-            <li><CommandHelp label="/cart" />   your cart</li>
+            <li><CommandHelp cmd="/orders" />   show my orders</li>
+            <li><CommandHelp cmd="/cart" />   your cart</li>
           </ul>
           
         </div>
