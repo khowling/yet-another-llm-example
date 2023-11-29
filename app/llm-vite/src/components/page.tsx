@@ -18,7 +18,7 @@ function Header() {
   };
   // initially set the theme and "listen" for changes to apply them to the HTML tag
   useEffect(() => {
-    document.querySelector('html').setAttribute('data-theme', theme);
+    document?.querySelector('html')?.setAttribute('data-theme', theme);
   }, [theme]);
 
   return (
@@ -88,7 +88,7 @@ function Header() {
 export default function Page() {
   return ([
 
-      <Chat/>,
-      <Header/>
+      <Chat key={10}/>,
+      <Header key={20}/>
   ])
 }

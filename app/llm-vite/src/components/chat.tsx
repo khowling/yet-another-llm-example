@@ -1,7 +1,24 @@
-import React, { useState, useRef, useEffect, Suspense, createElement } from "react";
+import { useState, useRef, useEffect, Suspense, createElement, createContext, useContext } from "react";
 import FileList from "./FileList";
 import FileUploadClient from "./FileUpload";
 
+
+enum ChatMeType {
+  llm = "llm",
+  me = "me",
+  nav = "nav"
+}
+
+type ChatMe = {
+  type: ChatMeType,
+  text?: string,
+  command?: string,
+  component?: any
+  componentProp?: string
+};
+
+
+export const MyChatContext = createContext<(chat: ChatMe) => void>((chat)  => {} );
 
 export function FileUpload() {
   return (
@@ -18,28 +35,28 @@ export function FileUpload() {
 function ShopLanding() {
   return ([
 
-    <div className="chat chat-start ml-5">
+    <div key={1} className="chat chat-start ml-5">
       <div className="chat-image avatar">
         <div className="w-8 rounded-full">
           <img alt="Tailwind CSS chat bubble component" src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
         </div>
       </div>
-      <div className="chat-bubble">type <span className="btn-primary p-1">/all</span> at any time to start navigating our catalog, or press <span className="btn-primary p-1">/help</span> </div>
+      <div className="chat-bubble">type <CommandHelp command="/all" type={ChatMeType.nav} component={ShopLanding} />  at any time to start navigating our catalog, or press <CommandHelp command="/help" type={ChatMeType.nav} component={Help} />  </div>
     </div>,
 
 
     <div key={6} className="flex flex-row flex-wrap gap-5 ml-5 px-10 mt-5">
 
-      { [{title: "shoes"},{title: "bikes"},{title: "phones"}].map((i) => 
+      { [{title: "shoes"},{title: "bikes"},{title: "phones"}].map((i,idx) => 
         
-        <div className="card bg-base-100 shadow-xl basis-60">
+        <div key={idx} className="card bg-base-100 shadow-xl basis-60">
           <figure><img src="https://daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.jpg" alt="Shoes" /></figure>
           <div className="card-body">
             <h2 className="card-title">{i.title}</h2>
             <p>If a dog chews shoes whose shoes does he choose?</p>
             <div className="card-actions justify-end">
               
-              <CommandHelp cmd="/explore" label={i.title} />
+              <CommandHelp command="/explore" type={ChatMeType.nav}  componentProp={i.title} />
              
             </div>
           </div>
@@ -52,12 +69,17 @@ function ShopLanding() {
   ])
 }
 
-function CommandHelp({cmd, label}: {cmd: string, label: string}) {
-  const cmdOut = <span className={`btn btn-primary min-h-fit h-auto p-${label ? '1' : '2'}`}>{cmd}</span>
-  return label === undefined ? cmdOut : <span className="btn min-h-fit h-auto p-1 border-primary bg-base-100 pr-2">{cmdOut}{label}</span>
+function CommandHelp({command, component, componentProp } : ChatMe) {
+
+  
+  const pushChat = useContext(MyChatContext);
+
+  const cmdOut = <span className={`btn btn-primary min-h-fit h-auto p-${componentProp ? '1' : '2'}`}  onClick={() => { console.log ('push') ; pushChat({type: ChatMeType.nav, command, component, componentProp})}}>{command}</span>
+  return componentProp === undefined ? cmdOut : <span className="btn min-h-fit h-auto p-1 border-primary bg-base-100 pr-2">{cmdOut}{componentProp}</span>
 }
 
-function Help({}) {
+function Help() {
+
   return ([
 
 
@@ -70,17 +92,32 @@ function Help({}) {
       <div className="card card-side bg-base-100 shadow-xl">
         <figure><img src="https://daisyui.com/images/stock/photo-1635805737707-575885ab0820.jpg" alt="Movie"/></figure>
         <div className="card-body">
-          <p className="card-title font-bold">shopping stuff</p>
-          
 
-          <ul className="list-none list-outside space-y-3">
-            <li><CommandHelp cmd="/all" />  show all the products we have to offer</li>
-            <li><CommandHelp cmd="/sale" />   whats on sale</li>
-            <li><CommandHelp cmd="/me" />   our personally shopper AI will look after you!</li>
-            <li><p className="font-bold">account stuff</p></li>
-            <li><CommandHelp cmd="/orders" />   show my orders</li>
-            <li><CommandHelp cmd="/cart" />   your cart</li>
-          </ul>
+          <table className="table-fixed border-separate border-spacing-y-1.5 border-spacing-x-1">
+            <thead>
+              <tr>
+                <th></th>
+                <th className="text-left">shopping stuff</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><CommandHelp command="/all" type={ChatMeType.nav} component={ShopLanding}/></td><td>navigate all products we have to offer</td></tr>
+              <tr><td><CommandHelp command="/sale" type={ChatMeType.nav} /></td><td>whats on sale</td></tr>
+              <tr><td><CommandHelp command="/me" type={ChatMeType.nav}/></td><td>our personally shopper AI will look after you!</td></tr>
+              <tr><td><CommandHelp command="/cart" type={ChatMeType.nav}/></td><td>see your shopping cart</td></tr>
+              <tr><td><CommandHelp command="/saved" type={ChatMeType.nav}/></td><td>see your saved items</td></tr>
+            </tbody>
+            <thead>
+              <tr>
+                <th></th>
+                <th className="text-left">account stuff</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><CommandHelp command="/orders" type={ChatMeType.nav}/></td><td>show all the products we have to offer</td></tr>
+              <tr><td><CommandHelp command="/pay" type={ChatMeType.nav}/></td><td>see your payment methods</td></tr>
+            </tbody>
+          </table>
           
         </div>
       </div>
@@ -89,22 +126,23 @@ function Help({}) {
   ])
 }
 
-type ChatMe = Array<{
-  type: string,
-  text?: string,
-  component?: any
-}>;
 
  export default function Chat() {
-  const chatContainer = useRef(null);
+  const chatContainer = useRef<HTMLDivElement>(null);
 
 
-  const [chatme, setChatme] = useState<ChatMe>([{type: "llm", text: "You underestimate my power!"}, {type: "me", text: "It's over Anakin, I have the high ground."}])
+  // State for keeping track of our Navigation/Conversation, then make it available to as a Global Context
+  const [chatme, setChatme] = useState<Array<ChatMe>>([{type: ChatMeType.nav, component: ShopLanding}])
+
+  const pushChat = (chat: ChatMe) => {
+    console.log (`pushChat ${chat.type} ${chat.text}`)
+    setChatme((prev) => [...prev, chat]);
+  }
 
   const handleKeyDown = (event: any) => {
-      if (event.key === 'Enter') {
+      if (event.key === '/') {
         event.preventDefault();
-        setChatme((prev) => [...prev, {type: "me", text: event.target.value}]);
+        pushChat({type: ChatMeType.me, text: event.target.value});
         
       }
   };
@@ -116,13 +154,8 @@ type ChatMe = Array<{
     }
   }, [chatme]);
 
-
-  function help() {
-    setChatme((prev) => [...prev, {type: "nav", component: Help}]);
-  }
-
   return (
-
+    <MyChatContext.Provider value={pushChat}>
 
         <div id="cib-serp-main" className="absolute h-full w-full flex z-0">
 
@@ -131,12 +164,10 @@ type ChatMe = Array<{
               {/* padding top and botton to make space for the action bar and input */}
               <div className="content pt-28 pb-24 -z-1">
 
-                  <ShopLanding/>
-
                 { chatme.map((i,idx) => {
                   return i.type === "nav" ? (
                   
-                       createElement(i.component, {})
+                       createElement(i.component, {key: idx, ...i.componentProp && {componentProp: i.componentProp}})
                  ) :
                         i.type === "llm" ?
                       
@@ -167,7 +198,7 @@ type ChatMe = Array<{
 
               <div className="join w-full">
               
-                <div tabIndex={0} role="button" className="btn m-0 btn btn-primary join-item" onClick={help}>/help</div>
+                <div tabIndex={0} role="button" className="btn m-0 btn btn-primary join-item" onClick={() => pushChat({type: ChatMeType.nav, component: Help})}>/help</div>
                   
 
                 <div className="dropdown dropdown-top w-full">
@@ -187,6 +218,6 @@ type ChatMe = Array<{
 
         </div>
    
-
+      </MyChatContext.Provider>
   );
  }
