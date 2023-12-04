@@ -1,7 +1,8 @@
 
-import { DefaultAzureCredential } from '@azure/identity'
+import { DefaultAzureCredential, AzureCliCredential } from '@azure/identity'
 import { SASProtocol, BlobSASPermissions, generateBlobSASQueryParameters, BlobServiceClient, ContainerClient, BlobItem, ContainerListBlobFlatSegmentResponse } from "@azure/storage-blob"
 
+// "Storage Blob Data Contributor" role is required to create a user delegation key
 // from https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blob-create-user-delegation-sas-javascript#blob-create-sas-token-with-defaultazurecredential
 export  function listBlobs(blobName : string)  {
 
@@ -39,7 +40,7 @@ export async function createBlobSas(blobName : string, create : boolean = false)
     // Best practice: use managed identity - DefaultAzureCredential
     const blobServiceClient = new BlobServiceClient(
         `https://${accountName}.blob.core.windows.net`,
-        new DefaultAzureCredential()
+        new AzureCliCredential()
       );
 
     // Best practice: delegation key is time-limited  

@@ -21,6 +21,18 @@
             "program": "${workspaceFolder}/app/llm-vite/server/index.ts",
             "preLaunchTask": "tsc: build - app/llm-vite/tsconfig.server.json",
             "outFiles": ["${workspaceFolder}/app/llm-vite/dist/**/*.js"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch NextJs",
+            "cwd": "${workspaceFolder}/app/llm-nextjs",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "dev"],
+            "env":{
+                "AZURE_STORAGE_ACCOUNT_NAME": "khacafilestore",
+                "AZURE_STORAGE_BLOB_CONTAINER_NAME": "uploads"
+            }
         }
 
     ]

@@ -34,17 +34,36 @@ export function FileUpload() {
 
 function ShopLanding() {
   return ([
+    <div key={0} className="hero sm:w-4/5 mx-14" style={{backgroundImage: 'url(https://daisyui.com/images/stock/photo-1507358522600-9f71e620c44e.jpg)'}}>
+      <div className="hero-overlay bg-opacity-60"></div>
+      <div className="hero-content text-center text-neutral-content">
+        <div className="max-w-md">
+          <h1 className="mb-5 text-5xl font-bold">Hello there</h1>
+          <p className="mb-5">Welcome to our excellent shop, come explore what we have to offer.</p>
+          
+        </div>
+      </div>
+    </div>,
 
-    <div key={1} className="chat chat-start ml-5">
+    <div key={1} className="chat chat-start ml-5 mt-5">
       <div className="chat-image avatar">
         <div className="w-8 rounded-full">
           <img alt="Tailwind CSS chat bubble component" src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
         </div>
       </div>
-      <div className="chat-bubble">type <CommandHelp command="/all" type={ChatMeType.nav} component={ShopLanding} />  at any time to start navigating our catalog, or press <CommandHelp command="/help" type={ChatMeType.nav} component={Help} />  </div>
-    </div>,
 
+      <div className="chat-bubble chat-bubble-info">
+        <div className="">type <CommandHelp command="/explore" type={ChatMeType.nav} component={Explore} /> or <CommandHelp command="/sale" type={ChatMeType.nav} component={ShopLanding} />  at any time to start navigating our catalog, or press <CommandHelp command="/help" type={ChatMeType.nav} component={Help} />  
+        </div>      
+      </div>
+    </div>
 
+  ])
+}
+
+function Explore({componentProp}: {componentProp: string}) {
+  return (
+    
     <div key={6} className="flex flex-row flex-wrap gap-5 ml-5 px-10 mt-5">
 
       { [{title: "shoes"},{title: "bikes"},{title: "phones"}].map((i,idx) => 
@@ -56,17 +75,14 @@ function ShopLanding() {
             <p>If a dog chews shoes whose shoes does he choose?</p>
             <div className="card-actions justify-end">
               
-              <CommandHelp command="/explore" type={ChatMeType.nav}  componentProp={i.title} />
+              <CommandHelp command="/explore" type={ChatMeType.nav} component={Explore} componentProp={i.title} />
              
             </div>
           </div>
         </div>
       )}
-
-      
-
     </div>
-  ])
+  )
 }
 
 function CommandHelp({command, component, componentProp } : ChatMe) {
@@ -101,7 +117,7 @@ function Help() {
               </tr>
             </thead>
             <tbody>
-              <tr><td><CommandHelp command="/all" type={ChatMeType.nav} component={ShopLanding}/></td><td>navigate all products we have to offer</td></tr>
+              <tr><td><CommandHelp command="/explore" type={ChatMeType.nav} component={Explore}/></td><td>navigate all products we have to offer</td></tr>
               <tr><td><CommandHelp command="/sale" type={ChatMeType.nav} /></td><td>whats on sale</td></tr>
               <tr><td><CommandHelp command="/me" type={ChatMeType.nav}/></td><td>our personally shopper AI will look after you!</td></tr>
               <tr><td><CommandHelp command="/cart" type={ChatMeType.nav}/></td><td>see your shopping cart</td></tr>
