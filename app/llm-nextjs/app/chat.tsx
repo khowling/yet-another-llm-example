@@ -1,6 +1,6 @@
 "use client"
 import { useState, useRef, useEffect, createElement, Suspense } from "react";
-import { ShopLanding, txtComing } from "./serverData";
+import { ShopLanding, OpenAIResponse, ServerData } from "./serverData";
 
 
 export enum ChatMeType {
@@ -18,49 +18,15 @@ export type ChatMe = {
 };
 
 
-//------------------
-type ReturnType<T> = {
-  data?: T;
-  loading: boolean;
-  error?: any;
-  refetch: () => void;
-}
+// Since Client Components are rendered *after* Server Components,
+// you cannot import a Server Component into a Client Component module (since it would require a new request back to the server). 
+// Instead, you can pass a Server Component as props to a Client Component
 
-function useAsyncGenerator<T>(generatorFn: () => IterableIterator<Promise<T>>): ReturnType<T> {
-  const [state, setState] = useState<ReturnType<T>>({ loading: true, refetch: () => {} });
-
-  useEffect(() => {
-    async function executeRequest(gen: IterableIterator<Promise<T>>) {
-      try {
-        const { value, done } = await gen.next();
-        if (!done) {
-          setState((prevState) => ({ ...prevState, loading: false, data: value as any }));
-          executeRequest(gen);
-        } else {
-          setState((prevState) => ({ ...prevState, loading: false, data: value }));
-        }
-      } catch (error) {
-        setState((prevState) => ({ ...prevState, loading: false, error }));
-      }
-    }
-    function refetch() {
-      setState((prevState) => ({ ...prevState, loading: true }));
-      executeRequest(generatorFn());
-    }
-    executeRequest( generatorFn());
-    setState((prevState) => ({ ...prevState, refetch }));
-  }, []);
-  return state;
-}
-//-------------------
-
-export default function Chat() {
+export default function Chat({shoplanding}) {
   const chatContainer = useRef<HTMLDivElement>(null);
-
 
   // State for keeping track of our Navigation/Conversation, then make it available to as a Global Context
   const [chatme, setChatme] = useState<Array<ChatMe>>([{type: ChatMeType.nav, component: ShopLanding}])
-  const state = useAsyncGenerator<{ data: string}>(txtComing);
 
   const pushChat = (chat: ChatMe) => {
     console.log (`pushChat ${chat.type} ${chat.text}`)
@@ -82,6 +48,7 @@ export default function Chat() {
     }
   }, [chatme]);
 
+
   return (
 
         <div id="cib-serp-main" className="absolute h-full w-full flex z-0">
@@ -93,7 +60,8 @@ export default function Chat() {
               
               { chatme.map((i,idx) => {
                   return i.type === "nav" ? (
-                    <Suspense fallback={<p>Loading feed...</p>}> {
+                    <Suspense key={idx} fallback={<p>Loading feed...</p>}> 
+                    {
                        createElement(i.component, {key: idx, ...i.componentProp && {componentProp: i.componentProp}})
                     }</Suspense>
                  ) :
@@ -107,7 +75,7 @@ export default function Chat() {
                  </div> 
 
                  <div className="chat chat-start">
-                   <div className="chat-bubble">It's over Anakin, <br/>I have the high ground.</div>
+                   <div className="chat-bubble"></div>
                  </div>
                </div>
                :  
@@ -116,6 +84,19 @@ export default function Chat() {
                </div>
                
          })}
+
+
+                <div key={99} className="flex items-end overflow-auto gap-1 ml-3">
+                 <div className="avatar placeholder">
+                   <div className="text-neutral-content rounded-full w-8">
+                   <img src="https://randomuser.me/api/portraits/men/41.jpg" alt="Bot" className="rounded-full w-10 h-10" />
+                   </div>
+                 </div> 
+
+                 <div className="chat chat-start">
+                   <div className="chat-bubble"></div>
+                 </div>
+               </div>
                 
               </div>
           </div>

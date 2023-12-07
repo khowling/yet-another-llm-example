@@ -3,17 +3,25 @@
 // import { getFileSaS } from "../utils/getSaS";
 
 
-import Chat from "./chat"
+//import Chat from "./chat"
+import ChatClient from "./chatClient"
 import Header from "./header"
 import FileUploadClient from "./FileUpload"
 import FileList from "./FileList"
-import { Suspense } from "react"
+import { OpenAIResponse } from "./serverData";
+import { useEffect, useRef } from "react";
+import FeedLayout from "./feedLayout";
 
 
 
+// Pages in Next.js are Server Components by default
 export default function Page() {
+
+    const asks = ["hello",  "how are you?", "what is your name?"]
     return ([
-      <Chat key="chat"/>,
+      <FeedLayout>
+        <OpenAIResponse key={`4`} asks={"hello"} />
+      </FeedLayout>,
       <Header key="header"/>
     ])
 }

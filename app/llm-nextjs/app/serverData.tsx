@@ -1,22 +1,24 @@
+"use server";
+
 import { Suspense } from "react";
 
 
-export enum ChatMeType {
+enum ChatMeType {
     llm = "llm",
     me = "me",
     nav = "nav"
   }
   
-  export type ChatMe = {
+type ChatMe = {
     type: ChatMeType,
     text?: string,
     command?: string,
     component?: any
     componentProp?: string
-  };
+};
 
 
-export default function ServerData() {
+export async function ServerData() {
     return (
         <Suspense fallback={<p>Loading feed...</p>}>
             <ShopLanding/>
@@ -24,14 +26,71 @@ export default function ServerData() {
     )
 }
 
+type Props = {
+  /**
+   * A ReadableStream produced by the AI SDK.
+   */
+  asks: string;
+};
 
-export async function* txtComing () {
-    const txt = "Hello! I'm talking to you realtime!"
 
-    for (let i = 0; i < txt.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        yield txt[i]
-    }
+export async function OpenAIResponse (props?: Props) {
+
+  const { asks } = props;
+  //const reader = stream.getReader();
+
+  const controller = new AbortController();
+  const rs = new ReadableStream({
+    async start(controller) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      controller.enqueue('sending ask  ');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      controller.enqueue(asks);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      controller.enqueue(null);
+      controller.close();
+    },
+  });
+
+
+  return (
+      <div className="flex items-end overflow-auto gap-1 ml-3">
+        <div className="avatar placeholder">
+          <div className="text-neutral-content rounded-full w-8">
+            <img src="https://randomuser.me/api/portraits/men/41.jpg" alt="Bot" className="rounded-full w-10 h-10" />
+          </div>
+        </div>
+
+        <div className="chat chat-start">
+          <div className="chat-bubble"><RecursiveTokens reader={rs.getReader()} /></div>
+        </div>
+
+      </div>
+  );
+}
+
+type InternalProps = {
+  reader: ReadableStreamDefaultReader;
+};
+
+async function RecursiveTokens({ reader }: InternalProps) {
+  const { done, value } = await reader.read();
+  let r = 0
+  //console.log(`RecursiveTokens done=${done}  value=${value}`)
+  if (done || r> 10) {
+    return null;
+  }
+  r++
+  const text = value // new TextDecoder().decode(value);
+
+  return (
+    <>
+      {text}
+      <Suspense fallback={null}>
+        <RecursiveTokens reader={reader} />
+      </Suspense>
+    </>
+  );
 }
 
 
@@ -95,7 +154,7 @@ export async function ShopLanding() {
     
     //const pushChat = useContext(MyChatContext);
   
-    const cmdOut = <span className={`btn btn-primary min-h-fit h-auto p-${componentProp ? '1' : '2'}`}  onClick={() => { console.log ('push') }}>{command}</span>
+    const cmdOut = <span className={`btn btn-primary min-h-fit h-auto p-${componentProp ? '1' : '2'}`}  >{command}</span>
     return componentProp === undefined ? cmdOut : <span className="btn min-h-fit h-auto p-1 border-primary bg-base-100 pr-2">{cmdOut}{componentProp}</span>
   }
   
