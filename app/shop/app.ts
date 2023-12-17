@@ -1,0 +1,153 @@
+import createError from 'http-errors'
+import express, { Application, Request, Response } from 'express'
+import http from 'http'
+import bodyParser from 'body-parser'
+import path from 'path'
+//var cookieParser = require('cookie-parser');
+//var logger = require('morgan');
+
+//var indexRouter = require('./routes/index');
+//var usersRouter = require('./routes/users');
+import chatRouter from './routes/chat.js'
+
+
+
+import { MongoClient } from 'mongodb'
+
+const murl : string = process.env.MONGO_DB || "mongodb://localhost:27017/azshop?replicaSet=rs0"
+const client = new MongoClient(murl);
+
+ 
+export const getDb = async () => {
+    // Connect MongoDB
+  await client.connect();
+  return client.db();
+}
+
+
+var app = express();
+
+// view engine setup
+app.set('views', './views');
+app.set('view engine', 'ejs');
+
+//app.use(logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+//app.use(cookieParser());
+app.use(express.static('./public'));
+app.use(bodyParser.json()) // for parsing application/json
+app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
+
+
+app.get('/', function(req, res, next) {
+  res.render('index', { title: 'Express' });
+});
+
+app.get('/products', async (req, res, next) => {
+
+  const db = await getDb();
+  const categories = await db.collection('products').find({ type:  "Category"}).toArray()
+
+  res.render('products', { categories });
+})
+
+
+app.use('/api/chat', chatRouter)
+//app.use('/users', usersRouter);
+
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+  next(createError(404));
+});
+
+// catch all error handler
+app.use((err: { message: any; status: any }, req: { app: { get: (arg0: string) => string } }, res: { locals: { message: any; error: any }; status: (arg0: any) => void; render: (arg0: string) => void }, next: any) => {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+  // render the error page
+  res.status(err.status || 500);
+  res.render('error');
+});
+
+
+
+var port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+
+/**
+ * Create HTTP server.
+ */
+
+var server = http.createServer(app);
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val : string) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error: any) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr?.port;
+  console.debug('Listening on ' + bind);
+}
+

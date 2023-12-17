@@ -8,27 +8,12 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Vite UI",
-            "cwd": "${workspaceFolder}/app/llm-vite",
+            "name": "Launch HTMX Shop",
+            "cwd": "${workspaceFolder}/app/shop",
+            "preLaunchTask": "tsc: build - app/shop/tsconfig.json",
+            "outFiles": ["${workspaceFolder}/app/shop/dist/**/*.js"],
             "runtimeExecutable": "npm",
-            "runtimeArgs": ["run", "dev"]
-        },
-        {
-
-            "type": "node",
-            "request": "launch",
-            "name": "Launch Server",
-            "program": "${workspaceFolder}/app/llm-vite/server/index.ts",
-            "preLaunchTask": "tsc: build - app/llm-vite/tsconfig.server.json",
-            "outFiles": ["${workspaceFolder}/app/llm-vite/dist/**/*.js"]
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Launch NextJs",
-            "cwd": "${workspaceFolder}/app/llm-nextjs",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": ["run", "dev"],
+            "runtimeArgs": ["run", "start"],
             "env":{
                 "AZURE_STORAGE_ACCOUNT_NAME": "khacafilestore",
                 "AZURE_STORAGE_BLOB_CONTAINER_NAME": "uploads"
