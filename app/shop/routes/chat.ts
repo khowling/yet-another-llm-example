@@ -94,7 +94,7 @@ router.get('/completion', async (req, res, next) => {
         }
         
         res.write(`event: close${chat.chatid}\n`);
-        res.end(`data: <div class="chat-bubble">${response}</div>\n\n`);
+        res.end(`data: <div class="chat-bubble chat-bubble-info">${response}</div>\n\n`);
         chats[chatsidx].complete = true
         //console.log (`completed: ${chatsidx}`)
 

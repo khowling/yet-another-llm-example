@@ -44,7 +44,7 @@ app.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
-app.get('/products', async (req, res, next) => {
+app.get('/explore', async (req, res, next) => {
 
   const db = await getDb();
   const categories = await db.collection('products').find({ type:  "Category"}).toArray()

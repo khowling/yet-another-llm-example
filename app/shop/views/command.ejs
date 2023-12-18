@@ -1,0 +1,11 @@
+
+<button class="min-h-fit " hx-get="<%= command %>" hx-target="#messages" hx-swap="beforebegin show:bottom">
+<% if(componentArg) { %>
+<span class="btn min-h-fit h-auto p-1 border-primary bg-base-100 pr-2" >
+<% } %>
+    <span class="btn btn-primary min-h-fit h-auto p-<%= componentArg ? 1 : 2 %>" ><%= command %></span>
+<% if(componentArg) { %>
+    <%= componentArg %>
+</span>
+<% } %>
+</button>

@@ -10,9 +10,8 @@
         <h2 class="card-title"><%= i.heading %></h2>
               <p><%= i.description.substring(0, 80) %>...</p>
           <div class="card-actions justify-end">
-            
-            <CommandHelp command="/explore" type={ChatMeType.nav} component={Explore} componentProp={i.heading} />
-           
+            <%- include('command', {command: '/explore', componentArg: i.heading}); %>
+          
           </div>
         </div>
       </div>
@@ -27,7 +26,7 @@
     </div>
 
     <div class="chat-bubble chat-bubble-info">
-    <div class="">type <CommandHelp command="/explore" type={ChatMeType.nav} component={Explore} /> or <CommandHelp command="/sale" type={ChatMeType.nav} component={ShopLanding} />  at any time to start navigating our catalog, or press <CommandHelp command="/help" type={ChatMeType.nav} component={Help} />  
+    <div class="">type <%- include('command', {command: '/explore', componentArg:''}); %> or <%- include('command', {command: '/sale', componentArg:''});  %>  at any time to start navigating our catalog, or press <%- include('command', {command: '/help', componentArg:''}); %> 
     </div>      
     </div>
 </div>
