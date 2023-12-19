@@ -1,9 +1,9 @@
-<% if (typeof subcommand  != "undefined") { %>
-    <span class="btn h-auto  border-primary bg-base-100 p-1.5 min-h-0" hx-get="<%= command+'/'+args %>" hx-target="#messages" hx-swap="beforebegin show:bottom">
+<% if (typeof subcommand  != 'undefined') { %>
+    <span class="btn h-auto  border-primary bg-base-100 p-1.5 min-h-0" hx-get="<%= typeof args != 'undefined' ? command+'/'+args : command %>" hx-target="#messages" hx-swap="beforebegin show:bottom">
         <span class="btn btn-primary min-h-fit h-auto p-1" ><%= command %></span>
         <span><%= subcommand %></span>
     </span>
 </span>
 <% } else { %>
-    <span class="btn btn-primary min-h-fit h-auto p-2" hx-get="<%= command %>" hx-target="#messages" hx-swap="beforebegin show:bottom"><%= command %></span>
+    <span class="btn btn-primary min-h-fit h-auto p-2" hx-get="<%= typeof args != 'undefined' ? command+'/'+args : command %>" hx-target="#messages" hx-swap="beforebegin show:bottom"><%= command %></span>
 <% } %>

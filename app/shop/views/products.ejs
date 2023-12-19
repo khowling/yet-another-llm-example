@@ -11,8 +11,8 @@
             <% if (i.type == 'Category') { %>
               <%- include('command', {command: '/explore', subcommand: i.heading, args: i._id}); %>
             <% } else if (i.type == 'Product') { %>
-              <%- include('command', {command: '/add', subcommand: i.heading, args: i._id}); %>
-              <%- include('command', {command: '/details', subcommand: i.heading, args: i._id}); %>
+              <%- include('command', {command: '/add', args: i._id, args: i._id}); %>
+              <%- include('command', {command: '/details', args: i._id, args: i._id}); %>
             <% } %>
           
           </div>

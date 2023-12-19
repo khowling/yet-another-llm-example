@@ -69,6 +69,21 @@ app.get('/explore/:category', async (req, res, next) => {
   }
 })
 
+app.get('/add/:productid', async (req, res, next) => {
+  const { productid } = req.params;
+
+  try {
+    const db = await getDb();
+    const product = await db.collection('products').findOne({ _id: new ObjectId(productid)})
+
+    res.render('textresponse', { question: "", answer: `${product?.heading} added to your cart` });
+
+  } catch (error: any) {
+    res.status(500).send(error);
+  }
+})
+
+
 app.use('/api/chat', chatRouter)
 //app.use('/users', usersRouter);
 
