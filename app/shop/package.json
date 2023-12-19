@@ -9,6 +9,7 @@
   "dependencies": {
     "@azure/identity": "^4.0.0",
     "@azure/openai": "^1.0.0-beta.8",
+    "@azure/storage-blob": "^12.17.0",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "ejs": "~2.6.1",

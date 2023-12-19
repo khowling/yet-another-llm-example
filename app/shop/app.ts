@@ -12,7 +12,7 @@ import chatRouter from './routes/chat.js'
 
 
 
-import { MongoClient } from 'mongodb'
+import { MongoClient, ObjectId } from 'mongodb'
 
 const murl : string = process.env.MONGO_DB || "mongodb://localhost:27017/azshop?replicaSet=rs0"
 const client = new MongoClient(murl);
@@ -44,14 +44,30 @@ app.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
+app.get('/help', function(req, res, next) {
+  res.render('help', { full: false });
+});
+
 app.get('/explore', async (req, res, next) => {
 
   const db = await getDb();
   const categories = await db.collection('products').find({ type:  "Category"}).toArray()
 
-  res.render('products', { categories });
+  res.render('products', { categories, imageBaseUrl: 'https://127.0.0.1:10000/devstoreaccount1/images' });
 })
 
+app.get('/explore/:category', async (req, res, next) => {
+  const { category } = req.params;
+
+  try {
+    const db = await getDb();
+    const categories = await db.collection('products').find({ type:  "Product", category_id: new ObjectId(category)}).toArray()
+
+    res.render('products', { categories, imageBaseUrl: 'https://127.0.0.1:10000/devstoreaccount1/images' });
+  } catch (error: any) {
+    res.status(500).send(error);
+  }
+})
 
 app.use('/api/chat', chatRouter)
 //app.use('/users', usersRouter);

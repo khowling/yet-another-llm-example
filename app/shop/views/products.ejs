@@ -1,32 +1,23 @@
-
-
 <div class="flex flex-row flex-wrap gap-5 my-5">
     
     <% categories.forEach((i) => { %>
       
       <div key={i.title} class="card bg-base-100 shadow-xl basis-60">
-        <figure><img src="https://daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.jpg" alt="Shoes" /></figure>
+        <figure><img src="<%= imageBaseUrl+'/'+i.image.pathname %>" alt="Shoes" /></figure>
         <div class="card-body">
         <h2 class="card-title"><%= i.heading %></h2>
               <p><%= i.description.substring(0, 80) %>...</p>
           <div class="card-actions justify-end">
-            <%- include('command', {command: '/explore', componentArg: i.heading}); %>
+            <% if (i.type == 'Category') { %>
+              <%- include('command', {command: '/explore', subcommand: i.heading, args: i._id}); %>
+            <% } else if (i.type == 'Product') { %>
+              <%- include('command', {command: '/add', subcommand: i.heading, args: i._id}); %>
+              <%- include('command', {command: '/details', subcommand: i.heading, args: i._id}); %>
+            <% } %>
           
           </div>
         </div>
       </div>
     <% }); %>
 </div>
-    
-<div key="Help1" class="chat chat-start ">
-    <div class="chat-image avatar">
-    <div class="w-8 rounded-full">
-        <img alt="Tailwind CSS chat bubble component" src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
-    </div>
-    </div>
 
-    <div class="chat-bubble chat-bubble-info">
-    <div class="">type <%- include('command', {command: '/explore', componentArg:''}); %> or <%- include('command', {command: '/sale', componentArg:''});  %>  at any time to start navigating our catalog, or press <%- include('command', {command: '/help', componentArg:''}); %> 
-    </div>      
-    </div>
-</div>

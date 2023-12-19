@@ -20,12 +20,20 @@ const blobServiceClient = new BlobServiceClient(
 //     return containerClient.getBlockBlobClient(pathname);
 // }
 
-async function writeimages(tenent_key, images) {
+async function writeimages(partition_key : string, images: { [pathname: string]: string}) {
 
     const fileregex = /.+\.([^.]+$)/
     const containerClient = blobServiceClient.getContainerClient(IMAGE_CONTAINER);
-    // Create the container
-    await containerClient.createIfNotExists();
+    // Cleardown, then Create the container, allowing public access to blobs
+
+    await containerClient.createIfNotExists({access: 'blob'});
+
+    const existingBlobs = containerClient.listBlobsFlat();
+    // now delete existing blobs
+    for await (const blob of existingBlobs) {
+        console.log(`Deleting blob ${blob.name}`);
+        await containerClient.deleteBlob(blob.name);
+    }
 
     let imagemap = new Map()
     for (const pathname of Object.keys(images)) {
@@ -34,20 +42,27 @@ async function writeimages(tenent_key, images) {
             bstr = b64.toString('utf-8'),
             file_stream = Readable.from(bstr),
             extension = pathname.match(fileregex)?.[1],
-            filepath = `${tenent_key.toHexString()}/${(new ObjectId()).toString()}.${extension}`
+            filepath = `${partition_key}/${(new ObjectId()).toString()}.${extension}`
 
         if (extension) {
             console.log(`writeimages writing ${filepath}`);
             const bbClient = containerClient.getBlockBlobClient(filepath);
+            
 
             try {
-                await bbClient.uploadStream(file_stream, 4 * 1024 * 1024, 20, {
-                //abortSignal: AbortController.timeout(30 * 60 * 1000), // Abort uploading with timeout in 30mins
-                onProgress: (ev) => console.log(ev)
+                await bbClient.uploadData(b64, {
+                    blobHTTPHeaders: { blobContentType: `image/${extension}` },
+                    //abortSignal: AbortController.timeout(30 * 60 * 1000), // Abort uploading with timeout in 30mins
+                    onProgress: (ev) => console.log(ev)
                 });
+                //await bbClient.uploadStream(file_stream, {
+                //    blobHTTPHeaders: { blobContentType: `image/${extension}` },
+                //    //abortSignal: AbortController.timeout(30 * 60 * 1000), // Abort uploading with timeout in 30mins
+                //    onProgress: (ev) => console.log(ev)
+                //});
                 console.log(`uploadStream succeeds, got ${bbClient.name}`);
                 imagemap.set(pathname, { pathname: bbClient.name })
-            } catch (err) {
+            } catch (err: any) {
                 console.log(
                 `uploadStream failed, requestId - ${err.details.requestId}, statusCode - ${err.statusCode}, errorCode - ${err.details.errorCode}`
                 );
@@ -61,19 +76,19 @@ async function writeimages(tenent_key, images) {
 }
 
 import { images, products } from './bikes.json'
-import { TenentContext } from "../shop/ui/src/GlobalContexts";
+//import { TenentContext } from "../shop/ui/src/GlobalContexts";
 
-async function populateTenent(db: mongoDB.Db, tenent_key: mongoDB.ObjectId): Promise<void> { 
+async function populateTenent(db: mongoDB.Db, partition_key: string): Promise<void> { 
 
     const { Product, Category } = products
 
-    const imagemap = await writeimages(tenent_key, images)
+    const imagemap = await writeimages(partition_key, images)
 
     const catmap = new Map()
     const newcats = Category.map(function (c) {
         console.log(`populateTenent: Processing catalog ${c.heading}`)
         const old_id = c._id, new_id = new ObjectId()//.toHexString()
-        const newc = { ...c, _id: new_id, partition_key: tenent_key, creation: Date.now() }
+        const newc = { ...c, _id: new_id, partition_key: partition_key, creation: Date.now() }
         if (c.image && c.image.pathname) {
             newc.image = imagemap.get(c.image.pathname)
             if (!newc.image) {
@@ -84,13 +99,16 @@ async function populateTenent(db: mongoDB.Db, tenent_key: mongoDB.ObjectId): Pro
         return newc
     })
 
+    console.log (`Clearning down all products and categories..`)
+    await db.collection('products').deleteMany({partition_key: partition_key })
+
     console.log(`Loading Categories : ${JSON.stringify(newcats)}`)
     await db.collection('products').insertMany(newcats)
 
     const newproducts = Product.map(function (p) {
         console.log(`Processing product ${p.heading}`)
         const old_id = p._id, new_id = new ObjectId()//.toHexString()
-        const newp = { ...p, _id: new_id, partition_key: tenent_key, creation: Date.now() }
+        const newp = { ...p, _id: new_id, partition_key: partition_key, creation: Date.now() }
         if (p.category_id) {
             newp.category_id = catmap.get(p.category_id)
             if (!newp.category_id) {
@@ -129,7 +147,7 @@ async function populateTenent(db: mongoDB.Db, tenent_key: mongoDB.ObjectId): Pro
 
 
 
-const tenent_key = 'root'
+const PARTITION_KEY = 'root'
 interface TenentContext {
     name: string;
     image: { url: string };
@@ -156,15 +174,15 @@ async function main(): Promise<void> {
         console.log('Connected to the database, creating local developer tenent');
         
         
-        console.log(`tear down existing config`)
-        await db.collection('business').deleteMany({partition_key: tenent_key })
+        //console.log(`tear down existing config`)
+        //await db.collection('business').deleteMany({partition_key: partition_key })
 
     
         // Create new details.
-        const new_tenent = await db.collection('business').insertOne({ ...tenent_def, type: "business", partition_key: tenent_key })
+        //const new_tenent = await db.collection('business').insertOne({ ...tenent_def, type: "business", partition_key: partition_key })
         
         // Perform database operations here
-        await populateTenent(db, new_tenent.insertedId);
+        await populateTenent(db, PARTITION_KEY);
 
     } catch (error) {
         console.error('Error connecting to the database:', error);

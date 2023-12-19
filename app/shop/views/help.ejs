@@ -1,9 +1,10 @@
-<div key={1}  className="chat chat-end mr-3">
+<% if (typeof(full) =="undefined") { %>
+  
+<div  className="chat chat-end mr-3">
     <div className="bg-primary  chat-bubble">/help</div>
-  </div>,
+  </div>
 
-
-  <div key={2} className="flex flex-row flex-wrap gap-5 ml-5 px-10 mt-5">
+  <div className="flex flex-row flex-wrap gap-5 ml-5 px-10 mt-5">
     <div className="card card-side bg-base-100 shadow-xl">
       <figure><img src="https://daisyui.com/images/stock/photo-1635805737707-575885ab0820.jpg" alt="Movie"/></figure>
       <div className="card-body">
@@ -37,3 +38,17 @@
       </div>
     </div>
   </div>
+<% } else { %>
+  <div key="Help1" class="chat chat-start ">
+    <div class="chat-image avatar">
+    <div class="w-8 rounded-full">
+        <img alt="Tailwind CSS chat bubble component" src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+    </div>
+    </div>
+
+    <div class="chat-bubble chat-bubble-info">
+    <div class="">type <%- include('command', {command: '/explore'}); %> or <%- include('command', {command: '/sale'});  %>  at any time to start navigating our catalog, or press <%- include('command', {command: '/help'}); %> 
+    </div>      
+    </div>
+</div>
+<% } %>

@@ -22,13 +22,13 @@
 
 
 
-      <div id="cib-action-bar" class="absolute bottom-0 flex w-full  bg-base-100 transition-opacity">
+      <div id="cib-action-bar" class="absolute bottom-0 flex w-full  bg-base-100 transition-opacity mr-10">
   
         <div class="sm:px-16 px-4 mb-6 mt-4 w-full">
     
           <div class="join w-full">
           
-            <div tabIndex={0} role="button" class="btn m-0 btn btn-primary join-item" onClick={help}>/help</div>
+            <div tabIndex={0} role="button" class="btn m-0 btn btn-primary join-item" hx-get="/help" hx-target="#messages" hx-swap="beforebegin show:bottom">/help</div>
               
     
             <form hx-post="/api/chat/request" hx-target="#messages" hx-swap="beforebegin show:bottom" class="dropdown dropdown-top w-full" hx-on::after-request="this.reset()">

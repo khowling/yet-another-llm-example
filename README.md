@@ -49,6 +49,13 @@ instructions here https://learn.microsoft.com/en-us/azure/storage/common/storage
 
 
 
+# Initialise the database and images
+
+
+NODE_TLS_REJECT_UNAUTHORIZED=0  node setup/init_config.js
+
+
+
 
 #  Roadblock - Private Link support for Workload profiles!!
 https://github.com/microsoft/azure-container-apps/issues/867
