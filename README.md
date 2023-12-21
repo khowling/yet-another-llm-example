@@ -17,9 +17,27 @@ The other principles this repo upholds are
  :heavy_check_mark:  Automated testing will be needed for PR confidence & independent environment deployment with blue-green workflows  
 
 
-## To run locally
+## To run the project
 
-To run this project, you will need `nodejs`, strongly suggest using `WSL` if using a windows laptop,  we will also need `mongodb` to store our data, and `azurite` blob storage emulator to store our images and documents.
+To run this project, you will need `nodejs`,  if using a windows laptop, strongly suggest using the default Ubuntu distribution on `WSL`:
+
+ * Follow steps [here](https://learn.microsoft.com/en-us/windows/wsl/install) to install Ubuntu on WSL
+ * Then [here](https://code.visualstudio.com/) for Visual Studio, then the VSCode extension for WSL [here](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)
+ * Then steps 1-3 [here](https://github.com/nodesource/distributions?tab=readme-ov-file#installation-instructions) will install ndoejs 
+
+### Dependencies
+
+Now, the application also needs a database and storage (and an OpenAI API), you can either run these in the cloud for your development loop, or run them locally using local emulators. Follow 'Setup Dependencies in Cloud', of you want to run locally, follow 'Setup Dependencies Local,
+
+
+### Option1 : Setup Dependencies in Cloud
+
+
+
+If you have an Azure account already, is probably eisier to run the dependencies in your Azure subscription, for this follow 'Setup Dependencies in Cloud', of you want to run locally, follow 'Setup Dependencies Local,  for we will also need `mongodb` to store our data, and `azurite` blob storage emulator to store our images and documents.
+
+
+### Option 2 : Install depednecies locally
 
 
 ### install mongodb
