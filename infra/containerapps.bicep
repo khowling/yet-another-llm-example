@@ -1,11 +1,14 @@
 
+@minLength(4)
+@maxLength(22)
+param uniqueName string
 
-// create container apps resrource with internal load balancer
-param location string = 'westeurope'
-param resourceName string = 'khapp2'
+@description('Location for the cluster.')
+param location string = resourceGroup().location
+
 
 resource Vnet 'Microsoft.Network/virtualNetworks@2020-11-01' = {
-  name: 'khvnet'
+  name: '${uniqueName}-net'
   location: location
   properties: {
     addressSpace: {
@@ -18,7 +21,7 @@ resource Vnet 'Microsoft.Network/virtualNetworks@2020-11-01' = {
 
 
 resource Subnet 'Microsoft.Network/virtualNetworks/subnets@2020-11-01' = {
-  name: 'aca1'
+  name: 'aca'
   parent: Vnet
   properties: {
     addressPrefix: '10.0.1.0/27'
@@ -34,7 +37,7 @@ resource Subnet 'Microsoft.Network/virtualNetworks/subnets@2020-11-01' = {
 }
 
 resource AcaEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' = {
-  name: '${resourceName}-env'
+  name: '${uniqueName}-acaenv'
   location: location
   properties: {
     vnetConfiguration: {
@@ -55,7 +58,7 @@ resource AcaEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' = {
 }
 
 resource containerapp 'Microsoft.App/containerApps@2023-05-01' = {
-  name: resourceName
+  name: '${uniqueName}-hello'
   location: location
   properties: {
     managedEnvironmentId: AcaEnvironment.id

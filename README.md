@@ -27,17 +27,30 @@ To run this project, you will need `nodejs`,  if using a windows laptop, strongl
 
 ### Dependencies
 
-Now, the application also needs a database and storage (and an OpenAI API), you can either run these in the cloud for your development loop, or run them locally using local emulators. Follow 'Setup Dependencies in Cloud', of you want to run locally, follow 'Setup Dependencies Local,
+Now, the application needs a mongo database for our business objects and trasactions, blob storage for documents and images and a few OpenAI services, you can either run these in the cloud, or run them locally using local emulators (except for the AI dependencies). Follow 'Setup Dependencies in Cloud', of you want to run locally, follow 'Setup Dependencies Local,
 
+NOTE: If you have an Azure account already and your not familour with setting up a local laptop, is probably eisier to run the dependencies in your Azure subscription, for this follow 'Setup Dependencies in Cloud',
 
 ### Option1 : Setup Dependencies in Cloud
 
+#### CosmosDB for Mongo DB
+
+CosmosDB for Mongo DB now has 2 distinct options (more choices)
+
+implements the wire protocol for MongoDB, currently upto version 4.2. This allows transparent compatibility with MongoDB client SDKs, drivers, and tools, allowing us to use the mongodb libraries in our code.
+There are 2 choices, a `vCore` and a `Request Unit (RU)`, the cheapest here is a very small or serverless 'RU' capacity, plus it has a free offer.  
+
+a fully managed MongoDB-compatible database service for building modern applications with a familiar architecture
+
+However, we want a few of the features only in `vCore`, the Vector & Text indexes Search, also there is a free teir with 32GB of storage, and a new 'B' so we can get started for cheap.  This provisions a MongoDB cluster, with version 5 or 6!. It looks like you need to provision it with a server admin and password, does it support Managed Identity??!
 
 
-If you have an Azure account already, is probably eisier to run the dependencies in your Azure subscription, for this follow 'Setup Dependencies in Cloud', of you want to run locally, follow 'Setup Dependencies Local,  for we will also need `mongodb` to store our data, and `azurite` blob storage emulator to store our images and documents.
+
 
 
 ### Option 2 : Install depednecies locally
+
+ of you want to run locally, follow 'Setup Dependencies Local,  for we will also need `mongodb` to store our data, and `azurite` blob storage emulator to store our images and documents.
 
 
 ### install mongodb
