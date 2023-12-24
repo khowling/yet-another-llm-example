@@ -14,10 +14,7 @@
             "outFiles": ["${workspaceFolder}/app/shop/dist/**/*.js"],
             "runtimeExecutable": "npm",
             "runtimeArgs": ["run", "start"],
-            "env":{
-                "AZURE_STORAGE_ACCOUNT_NAME": "khacafilestore",
-                "AZURE_STORAGE_BLOB_CONTAINER_NAME": "uploads"
-            }
+            "envFile": "${workspaceFolder}/app/shop/.env"
         }
 
     ]

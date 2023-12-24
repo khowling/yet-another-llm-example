@@ -27,35 +27,32 @@ To run this project, you will need `nodejs`,  if using a windows laptop, strongl
 
 ### Dependencies
 
-Now, the application needs a mongo database for our business objects and trasactions, blob storage for documents and images and a few OpenAI services, you can either run these in the cloud, or run them locally using local emulators (except for the AI dependencies). Follow 'Setup Dependencies in Cloud', of you want to run locally, follow 'Setup Dependencies Local,
+Now, the application needs a `mongo database` for our business objects and trasactions, a `blob storage` for documents and images and a `few OpenAI services` for the chat experiance.  You can either run these in the cloud (recommended), or run them locally using local emulators (except for the AI dependencies of course). Follow 'Setup Dependencies in Cloud', or, of you want to run locally, follow 'Setup Dependencies Local,
 
-NOTE: If you have an Azure account already and your not familour with setting up a local laptop, is probably eisier to run the dependencies in your Azure subscription, for this follow 'Setup Dependencies in Cloud',
+NOTE: If you have an Azure account already and your not familour with setting up a local laptop, is probably eisier to run the dependencies in your Azure subscription
 
-### Option1 : Setup Dependencies in Cloud
+### Option1 : Setup Dependencies in Cloud (Azure)_
 
-This project has a script to setup all the dependencies in Azure, and create a local `dotenv` file will all the nesaccary connection details for the app to run locally.
+This repo contains has a script to setup all the dependencies you need to run this app, in Azure, at the same time, it creates a local `.env` file will all the nesaccary connection details for the app to run.
 
-Ensure you have the az cli, installed, and logged in with an account that has `owner` rights on the subscription.  This is needed as we will be created role assignements.
+Ensure you have the `az cli`, installed, and its logged in (`az login`) with an account that has `owner` rights on the subscription.  This is needed as the IaC will create Role Assignements.
 
-Just execute this commands and the app should run
+Just execute the following commands, the 1st line creates all the Azure dependencies, and the following lines populates `Mongo` and the `Blob Account` with an example catalog.
 
 ```
 bash setup/az.dependencies.sh 5a25 >app/shop/.env
+
 cd app/shop
+npm i
 npx tsx -r dotenv/config setup/init_config.ts
 ```
 
+Now, all you should need to do is open the app in `VSCode`, and run the server
 
-
-CosmosDB for Mongo DB now has 2 distinct options (more choices)
-
-implements the wire protocol for MongoDB, currently upto version 4.2. This allows transparent compatibility with MongoDB client SDKs, drivers, and tools, allowing us to use the mongodb libraries in our code.
-There are 2 choices, a `vCore` and a `Request Unit (RU)`, the cheapest here is a very small or serverless 'RU' capacity, plus it has a free offer.  
-
-a fully managed MongoDB-compatible database service for building modern applications with a familiar architecture
-
-However, we want a few of the features only in `vCore`, the Vector & Text indexes Search, also there is a free teir with 32GB of storage, and a new 'B' so we can get started for cheap.  This provisions a MongoDB cluster, with version 5 or 6!. It looks like you need to provision it with a server admin and password, does it support Managed Identity??!
-
+```
+$ vscode .
+```
+![VSCode Debug](./docs/vscodedebug.png)
 
 
 
@@ -97,6 +94,20 @@ instructions here https://learn.microsoft.com/en-us/azure/storage/common/storage
 
 NODE_TLS_REJECT_UNAUTHORIZED=0  node setup/init_config.js
 
+
+
+# Appendix
+
+## MongoDB on Azure Options
+
+CosmosDB for Mongo DB now has 2 distinct options (more choices)
+
+implements the wire protocol for MongoDB, currently upto version 4.2. This allows transparent compatibility with MongoDB client SDKs, drivers, and tools, allowing us to use the mongodb libraries in our code.
+There are 2 choices, a `vCore` and a `Request Unit (RU)`, the cheapest here is a very small or serverless 'RU' capacity, plus it has a free offer.  
+
+a fully managed MongoDB-compatible database service for building modern applications with a familiar architecture
+
+However, we want a few of the features only in `vCore`, the Vector & Text indexes Search, also there is a free teir with 32GB of storage, and a new 'B' so we can get started for cheap.  This provisions a MongoDB cluster, with version 5 or 6!. It looks like you need to provision it with a server admin and password, does it support Managed Identity??!
 
 
 

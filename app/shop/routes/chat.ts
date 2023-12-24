@@ -4,7 +4,7 @@ import { DefaultAzureCredential, AzureCliCredential } from '@azure/identity'
 import { OpenAIClient, AzureKeyCredential } from '@azure/openai'
 import { close } from 'fs';
 
-const client = new OpenAIClient('https://khaca-openai.openai.azure.com/', new AzureCliCredential());
+const client = new OpenAIClient(process.env.AISHOP_OPENAI_ENDPOINT as string, new AzureCliCredential());
 const router = Router();
 
 export default router;
@@ -47,60 +47,72 @@ router.get('/completion', async (req, res, next) => {
     
     
     const chatsidx = chats.findIndex(c => c.chatid === chatid)
-    const chat = chats[chatsidx]
-    console.log (chat)
+    const chat = chatsidx >= 0 ? chats[chatsidx] : undefined
+    
+    const headers = {
+        'Content-Type': 'text/event-stream',
+        'Connection': 'keep-alive',
+        'Cache-Control': 'no-cache'
+    };
+    res.writeHead(200, headers);
 
-    try {
 
-        const headers = {
-            'Content-Type': 'text/event-stream',
-            'Connection': 'keep-alive',
-            'Cache-Control': 'no-cache'
-        };
-        res.writeHead(200, headers);
-        res.write(`event: ${chat.chatid}\n`);
+    if (!chat) {
+        console.error('chat not found for ' + chatid);
+        res.write(`event: close${chatid}\n`);
+        res.end(`data: <div class="chat-bubble chat-bubble-warning">I'm not availabile right now, please continue to use the / commands to explore and order our products (${chatid} not found)</div>\n\n`);
+        return
+    } else {
 
-        const deploymentId = "gpt-35-turbo";
-        const events = client.listChatCompletions(deploymentId, [
-            { role: "system", content: "You are a helpful assistant. Respond as a tech influencer" },
-            { role: "user", content: chat.question }
-        ], { maxTokens: 256 });
+        try {
 
-        let response = '';
-        let isopencode = false;
+            
+            res.write(`event: ${chat.chatid}\n`);
 
-        for await (const event of events) {
-            const content = event.choices?.[0]?.delta?.content ?? '';
 
-            if (content) {
-                // wait 1/2 a second
-                //await new Promise((resolve) => setTimeout(resolve, 100));
-                
-                // need to add responses together to ensure we can match on completed patterns
-                response += content;
-                
-                const codematch = response.match(/```(\w*)\n/)
-                if (codematch && codematch.index) {
+            const events = client.listChatCompletions(process.env.AISHOP_OPENAI_MODELNAME as string, [
+                { role: "system", content: "You are a helpful assistant. Respond as a tech influencer" },
+                { role: "user", content: chat.question }
+            ], { maxTokens: 256 });
 
-                    response = response.replace(/```(\w*)\n/, isopencode ? closeCode : openCode)
-                    isopencode = !isopencode
+            let response = '';
+            let isopencode = false;
+
+            for await (const event of events) {
+                const content = event.choices?.[0]?.delta?.content ?? '';
+
+                if (content) {
+                    // wait 1/2 a second
+                    //await new Promise((resolve) => setTimeout(resolve, 100));
+                    
+                    // need to add responses together to ensure we can match on completed patterns
+                    response += content;
+                    
+                    const codematch = response.match(/```(\w*)\n/)
+                    if (codematch && codematch.index) {
+
+                        response = response.replace(/```(\w*)\n/, isopencode ? closeCode : openCode)
+                        isopencode = !isopencode
+                    }
+                    response = response.replaceAll('\n', '<br/>')
+
+                    res.write(`event: ${chat.chatid}\n`);
+                    res.write(`data:  ${response}\n\n`);
+                    
                 }
-                response = response.replaceAll('\n', '<br/>')
-
-                res.write(`event: ${chat.chatid}\n`);
-                res.write(`data:  ${response}\n\n`);
-                
             }
-        }
-        
-        res.write(`event: close${chat.chatid}\n`);
-        res.end(`data: <div class="chat-bubble chat-bubble-info">${response}</div>\n\n`);
-        chats[chatsidx].complete = true
-        //console.log (`completed: ${chatsidx}`)
+            
+            res.write(`event: close${chat.chatid}\n`);
+            res.end(`data: <div class="chat-bubble chat-bubble-info">${response}</div>\n\n`);
+            chats[chatsidx].complete = true
+            //console.log (`completed: ${chatsidx}`)
 
-    } catch (e: any) {
-        console.error(e);
-        res.status(500).end(e?.message);
+        } catch (e: any) {
+            console.error(e);
+            res.write(`event: close${chat.chatid}\n`);
+            res.end(`data: <div class="chat-bubble chat-bubble-warning">I'm not availabile right now, please continue to use the / commands to explore and order our products (${JSON.stringify(e)})</div>\n\n`);
+            return
+        }
     }
         
 });

@@ -17,6 +17,8 @@ import { MongoClient, ObjectId } from 'mongodb'
 const murl : string = process.env.AISHOP_MONGO_CONNECTION_STR || "mongodb://localhost:27017/azshop?replicaSet=rs0"
 const client = new MongoClient(murl);
 
+const imageBaseUrl = process.env.AISHOP_STORAGE_ACCOUNT ? `https://${process.env.AISHOP_STORAGE_ACCOUNT}.blob.core.windows.net/${process.env.AISHOP_IMAGE_CONTAINER}` : `https://127.0.0.1:10000/devstoreaccount1/${process.env.AISHOP_IMAGE_CONTAINER}`
+
  
 export const getDb = async () => {
     // Connect MongoDB
@@ -53,7 +55,7 @@ app.get('/explore', async (req, res, next) => {
   const db = await getDb();
   const categories = await db.collection('products').find({ type:  "Category"}).toArray()
 
-  res.render('products', { categories, imageBaseUrl: 'https://127.0.0.1:10000/devstoreaccount1/images' });
+  res.render('products', { categories, imageBaseUrl });
 })
 
 app.get('/explore/:category', async (req, res, next) => {
@@ -63,7 +65,7 @@ app.get('/explore/:category', async (req, res, next) => {
     const db = await getDb();
     const categories = await db.collection('products').find({ type:  "Product", category_id: new ObjectId(category)}).toArray()
 
-    res.render('products', { categories, imageBaseUrl: 'https://127.0.0.1:10000/devstoreaccount1/images' });
+    res.render('products', { categories, imageBaseUrl });
   } catch (error: any) {
     res.status(500).send(error);
   }

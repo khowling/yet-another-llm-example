@@ -73,5 +73,17 @@ module storage 'storage.bicep' = {
   }
 }
 
+module openai 'ai.bicep' = {
+  name: 'deploy-ai'
+  params: {
+    uniqueName: uniqueName
+    location: location
+    objectId: principalId
+    principalType: principalType
+  }
+}
+
 output cosmosConnectionURL string = cosmosMongo42.outputs.cosmosConnectionURL
 output storageAccountName string = storage.outputs.storageAccountName
+output openAIEndpoint string = openai.outputs.openAIEndpoint
+output openAIModel string = openai.outputs.openAIModel
