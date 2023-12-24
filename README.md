@@ -21,7 +21,7 @@ The other principles this repo upholds are:
 
 ## To run the project
 
-To run this project, you will need `nodejs`,  if using a windows laptop, strongly suggest using the default Ubuntu distribution on `WSL`:
+To run this project, you will need a Linux environment with access to a command shell with `nodejs`. If using Mac, this should be no problem, if using a Windows laptop, use the default Ubuntu distribution on the amazing `WSL`:
 
  * Follow steps [here](https://learn.microsoft.com/en-us/windows/wsl/install) to install Ubuntu on WSL
  * Then [here](https://code.visualstudio.com/) for Visual Studio, then the VSCode extension for WSL [here](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)
@@ -29,27 +29,30 @@ To run this project, you will need `nodejs`,  if using a windows laptop, strongl
 
 ### Dependencies
 
-Now, the application needs a `mongo database` for our business objects and trasactions, a `blob storage` for documents and images and a `few OpenAI services` for the chat experiance.  You can either run these in the cloud (recommended), or run them locally using local emulators (except for the AI dependencies of course). Follow 'Setup Dependencies in Cloud', or, of you want to run locally, follow 'Setup Dependencies Local,
+Now, the application needs a `mongo database` for our business objects and trasactions, a `blob storage` for documents and images and a `few OpenAI services` for the chat experiance.  You can either run these in the cloud (recommended), or run them locally using local emulators (except for the AI dependencies of course). Follow `Setup Dependencies in Cloud (Azure)`, or, if you want to run locally, follow `Install depednecies locally`
 
 NOTE: If you have an Azure account already and your not familour with setting up a local laptop, is probably eisier to run the dependencies in your Azure subscription
 
-### Option1 : Setup Dependencies in Cloud (Azure)_
+### Option1 : Setup Dependencies in Cloud (Azure)
 
-This repo contains has a script to setup all the dependencies you need to run this app, in Azure, at the same time, it creates a local `.env` file will all the nesaccary connection details for the app to run.
+This repo contains the nesassary scripts to setup all the dependencies you need to run this app, in Azure, at the same time, it creates a local `.env` file will all the nesaccary connection details for the app to run locally, with the dependencies running in Azure.
 
-Ensure you have the `az cli`, installed, and its logged in (`az login`) with an account that has `owner` rights on the subscription.  This is needed as the IaC will create Role Assignements.
+Ensure you have the Azure [`az cli`](https://learn.microsoft.com/cli/azure/install-azure-cli), installed, and its logged in (`az login`) with an account that has `owner` rights on the subscription.
 
-Just execute the following commands, the 1st line creates all the Azure dependencies, and the following lines populates `Mongo` and the `Blob Account` with an example catalog.
+Now, assuming you have clones the repo locally, and have changed directory to the repo folder, just execute the following commands: 
+
 
 ```
+# Run the Infrastructure templates to provision the dependencies in Azure
 bash setup/az.dependencies.sh 5a25 >app/shop/.env
 
+# Run the script to populated the database and storage with the demo catalog
 cd app/shop
 npm i
 npx tsx -r dotenv/config setup/init_config.ts
 ```
 
-Now, all you should need to do is open the app in `VSCode`, and run the server
+Now, all you should need to do is launch  `VSCode` from the repo folder and run the server:
 
 ```
 $ vscode .
@@ -57,6 +60,8 @@ $ vscode .
 ![VSCode Debug](./docs/vscodedebug.png)
 
 
+
+**Any Issues, raise an Issue**
 
 
 ### Option 2 : Install depednecies locally
@@ -89,6 +94,8 @@ mongosh --eval 'rs.initiate({ _id: "rs0", members: [ { _id: 0, host : "localhost
 
 instructions here https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite?tabs=visual-studio-code%2Cblob-storage
 
+**WIP**
+
 
 
 # Initialise the database and images
@@ -113,6 +120,8 @@ However, we want a few of the features only in `vCore`, the Vector & Text indexe
 
 
 
-#  Roadblock - Private Link support for Workload profiles!!
+##  Roadblock - 
+
+### Container Apps - Private Link support for Workload profiles :(
 https://github.com/microsoft/azure-container-apps/issues/867
 
