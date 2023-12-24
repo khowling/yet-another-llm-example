@@ -9,7 +9,8 @@ The intended (but not limited) scope of this project will include:
  * `/app/factory` factory to create inventry
  * `/app/order` the order processor
 
-The other principles this repo upholds are
+The other principles this repo upholds are:
+
  :heavy_check_mark:  Targeting cloud agnostic, open-source, open-protocols, allowing deployment to any cloud where possible
  :heavy_check_mark:  Full offline innerloop development, easily running the whole app on a dev laptop
  :heavy_check_mark:  Independent and loosly coupled services, with boundaries based on team & data transational data needs. (preferene to stateful event-driven state)
