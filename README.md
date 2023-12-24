@@ -11,10 +11,10 @@ The intended (but not limited) scope of this project will include:
 
 The other principles this repo upholds are:
 
- :heavy_check_mark:  Targeting cloud agnostic dependencies, open-source, open-protocols
- :heavy_check_mark:  Easily run the whole app on a dev laptop with local dependencies
- :heavy_check_mark:  Independent and loosly coupled services, with boundaries based on team & data 
- :heavy_check_mark:  Performance, Security, Reliability and Cost are 1st class considerations
+ :heavy_check_mark:  Targeting cloud agnostic dependencies, open-source, open-protocols  
+ :heavy_check_mark:  Easily run the whole app on a dev laptop with local dependencies  
+ :heavy_check_mark:  Independent and loosly coupled services, with boundaries based on team & data  
+ :heavy_check_mark:  Performance, Security, Reliability and Cost are 1st class considerations  
  :heavy_check_mark:  Automated testing & deployments, for PR confidence & blue-green workflows  
 
 ![App](./docs/app.jpg)
