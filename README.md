@@ -2,12 +2,12 @@
 
 # Retail Store with AI
 
-This repo showcases how webapps can be built in 2024, combining the power of both regular programming logic, and GPU based LLMs, giving the user an enhanced natural, feed-based UX that is instantly familour, allowing users to interact with all the services of our business intuativly.
+This project showcases how to design, build and deploy webapps, combining the power of both regular programming logic, and GPU based LLMs, giving the user an enhanced natural, feed-based UX that is instantly familour, allowing users to interact with all the services of your business intuativly.
 
-The intended (but not limited) scope of this project will include
- `/app/shop` the storefront
- `/app/factory` factory to create inventry
- `/app/order` the order processor
+The intended (but not limited) scope of this project will include:
+ * `/app/shop` the storefront
+ * `/app/factory` factory to create inventry
+ * `/app/order` the order processor
 
 The other principles this repo upholds are
  :heavy_check_mark:  Targeting cloud agnostic, open-source, open-protocols, allowing deployment to any cloud where possible
