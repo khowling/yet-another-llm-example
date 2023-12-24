@@ -11,12 +11,13 @@ The intended (but not limited) scope of this project will include:
 
 The other principles this repo upholds are:
 
- :heavy_check_mark:  Targeting cloud agnostic, open-source, open-protocols, allowing deployment to any cloud where possible  
- :heavy_check_mark:  Full offline innerloop development, easily running the whole app on a dev laptop  
- :heavy_check_mark:  Independent and loosly coupled services, with boundaries based on team & data transational data needs. (preferene to stateful event-driven state)  
- :heavy_check_mark:  Performance, scale-out, security and reliability are 1st class considerations for all components and designs  
- :heavy_check_mark:  Automated testing will be needed for PR confidence & independent environment deployment with blue-green workflows  
+ :heavy_check_mark:  Targeting cloud agnostic dependencies, open-source, open-protocols
+ :heavy_check_mark:  Easily run the whole app on a dev laptop with local dependencies
+ :heavy_check_mark:  Independent and loosly coupled services, with boundaries based on team & data 
+ :heavy_check_mark:  Performance, Security, Reliability and Cost are 1st class considerations
+ :heavy_check_mark:  Automated testing & deployments, for PR confidence & blue-green workflows  
 
+![App](./docs/app.jpg)
 
 ## To run the project
 
