@@ -1,7 +1,7 @@
 
 
 @minLength(4)
-@maxLength(22)
+@maxLength(18)
 param uniqueName string
 
 @description('Location for the cluster.')

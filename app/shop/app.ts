@@ -14,7 +14,7 @@ import chatRouter from './routes/chat.js'
 
 import { MongoClient, ObjectId } from 'mongodb'
 
-const murl : string = process.env.MONGO_DB || "mongodb://localhost:27017/azshop?replicaSet=rs0"
+const murl : string = process.env.AISHOP_MONGO_CONNECTION_STR || "mongodb://localhost:27017/azshop?replicaSet=rs0"
 const client = new MongoClient(murl);
 
  

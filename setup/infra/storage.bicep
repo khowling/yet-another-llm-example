@@ -1,6 +1,6 @@
 
 @minLength(4)
-@maxLength(22)
+@maxLength(18)
 param uniqueName string
 
 
@@ -10,14 +10,25 @@ param location string = resourceGroup().location
 @description('Specifies the object ID of a user, service principal or security group in the Azure Active Directory tenant for the vault. The object ID must be unique for the list of access policies. Get it by using Get-AzADUser or Get-AzADServicePrincipal cmdlets.')
 param objectId string
 
+@description('principle type')
+@allowed([
+  'User'
+  'ServicePrincipal'
+])
+param principalType string 
+
+
 
 //-----------------Storage Account Construction-----------------
 resource StorageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
-  name: '${uniqueName}sa'
+  name: 'aishop${uniqueName}'
   location: location
   kind: 'StorageV2'
   sku: {
-    name: 'Standard_GRS'
+    name: 'Standard_LRS'
+  }
+  properties: {
+    allowBlobPublicAccess: true
   }
 
 
@@ -56,15 +67,17 @@ resource blobStorageDataContributorRoleDefinition 'Microsoft.Authorization/roleD
   name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 }
 
-
-resource roleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-   name: 'aca-role-assignment'
-   scope: StorageAccount
-   properties: {
-     principalId: objectId
-     roleDefinitionId: blobStorageDataContributorRoleDefinition.id
+resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(StorageAccount.id, objectId, blobStorageDataContributorRoleDefinition.id)
+  scope: StorageAccount
+  properties: {
+    roleDefinitionId: blobStorageDataContributorRoleDefinition.id
+    principalId: objectId
+    principalType: principalType
   }
 }
 
+
 //form recognizer role assignment
 //var Cognitive_Services_User = '/providers/Microsoft.Authorization/roleDefinitions/a97b65f3-24c7-4388-baec-2e87135dc908'
+output storageAccountName string = StorageAccount.name

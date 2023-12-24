@@ -1,3 +1,5 @@
+// https://learn.microsoft.com/en-us/azure/service-connector/how-to-integrate-cosmos-db?tabs=nodejs#sample-code-2
+
 import * as mongoDB from "mongodb";
 import { ObjectId } from 'bson'
 import { Readable } from 'stream';
@@ -5,10 +7,13 @@ import { Readable } from 'stream';
 import { DefaultAzureCredential,  } from '@azure/identity';
 import { BlobServiceClient, StorageSharedKeyCredential, BlockBlobClient } from "@azure/storage-blob"
 
-const IMAGE_CONTAINER = process.env.IMAGE_CONTAINER || 'images'
+
+const client: mongoDB.MongoClient = new mongoDB.MongoClient(process.env.AISHOP_MONGO_CONNECTION_STR || 'mongodb://localhost:27017/azshop');
+
+const AISHOP_IMAGE_CONTAINER = process.env.AISHOP_IMAGE_CONTAINER || 'images'
 
 const blobServiceClient = new BlobServiceClient(
-    process.env.STORAGE_ACCOUNT ?  `https://${process.env.STORAGE_ACCOUNT}.blob.core.windows.net` : 'https://127.0.0.1:10000/devstoreaccount1',
+    process.env.AISHOP_STORAGE_ACCOUNT ?  `https://${process.env.AISHOP_STORAGE_ACCOUNT}.blob.core.windows.net` : 'https://127.0.0.1:10000/devstoreaccount1',
     new DefaultAzureCredential()
   );
 
@@ -23,7 +28,7 @@ const blobServiceClient = new BlobServiceClient(
 async function writeimages(partition_key : string, images: { [pathname: string]: string}) {
 
     const fileregex = /.+\.([^.]+$)/
-    const containerClient = blobServiceClient.getContainerClient(IMAGE_CONTAINER);
+    const containerClient = blobServiceClient.getContainerClient(AISHOP_IMAGE_CONTAINER);
     // Cleardown, then Create the container, allowing public access to blobs
 
     await containerClient.createIfNotExists({access: 'blob'});
@@ -165,8 +170,6 @@ const tenent_def: TenentContext = {
 
 
 async function main(): Promise<void> {
-
-    const client: mongoDB.MongoClient = new mongoDB.MongoClient(process.env.DB_CONN_STRING || 'mongodb://localhost:27017/azshop');
     
     try {
         await client.connect();

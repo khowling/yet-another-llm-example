@@ -33,7 +33,19 @@ NOTE: If you have an Azure account already and your not familour with setting up
 
 ### Option1 : Setup Dependencies in Cloud
 
-#### CosmosDB for Mongo DB
+This project has a script to setup all the dependencies in Azure, and create a local `dotenv` file will all the nesaccary connection details for the app to run locally.
+
+Ensure you have the az cli, installed, and logged in with an account that has `owner` rights on the subscription.  This is needed as we will be created role assignements.
+
+Just execute this commands and the app should run
+
+```
+bash setup/az.dependencies.sh 5a25 >app/shop/.env
+cd app/shop
+npx tsx -r dotenv/config setup/init_config.ts
+```
+
+
 
 CosmosDB for Mongo DB now has 2 distinct options (more choices)
 

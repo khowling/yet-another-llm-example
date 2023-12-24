@@ -1,6 +1,6 @@
 
 @minLength(4)
-@maxLength(22)
+@maxLength(18)
 param uniqueName string
 
 @description('Location for the cluster.')
@@ -9,7 +9,7 @@ param location string = resourceGroup().location
 
 //---------FormRecognizer Construction---------
 resource FormRecognizer 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
-  name: '${uniqueName}-formrecog'
+  name: 'aishop-${uniqueName}'
   location: location
   kind: 'FormRecognizer'
   sku: {
@@ -27,7 +27,7 @@ resource FormRecognizer 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
 
 //---------Translator Construction---------
 resource Translator 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
-  name: '${uniqueName}-translator'
+  name: 'aishop-${uniqueName}'
   location: location
   kind: 'TextTranslation'
   sku: {

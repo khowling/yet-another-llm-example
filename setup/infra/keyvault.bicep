@@ -1,6 +1,6 @@
 
 @minLength(4)
-@maxLength(22)
+@maxLength(18)
 param uniqueName string
 
 @description('Location for the cluster.')
@@ -12,11 +12,15 @@ param tenantId string = subscription().tenantId
 @description('Specifies the object ID of a user, service principal or security group in the Azure Active Directory tenant for the vault. The object ID must be unique for the list of access policies. Get it by using Get-AzADUser or Get-AzADServicePrincipal cmdlets.')
 param objectId string
 
-@secure()
-@description('Password for admin user')
-@minLength(8)
-@maxLength(128)
-param adminPassword string
+@description('principle type')
+@allowed([
+  'User'
+  'ServicePrincipal'
+])
+param principalType string 
+
+@description('Array of secrets to store in KeyVault')
+param secrets array = []
 
 @description('Specifies the permissions to keys in the vault. Valid values are: all, encrypt, decrypt, wrapKey, unwrapKey, sign, verify, get, list, create, update, import, delete, backup, restore, recover, and purge.')
 param keysPermissions array = [
@@ -29,7 +33,7 @@ param secretsPermissions array = [
 ]
 
 resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
-  name: '${uniqueName}-kv'
+  name: 'aishop-${uniqueName}'
   location: location
   properties: {
     tenantId: tenantId
@@ -55,13 +59,13 @@ resource kv 'Microsoft.KeyVault/vaults@2022-07-01' = {
   }
 }
 
-resource mongoSecret 'Microsoft.KeyVault/vaults/secrets@2022-07-01' = {
+resource kvsecrets 'Microsoft.KeyVault/vaults/secrets@2022-07-01'  = [for secret in secrets: {
   parent: kv
-  name: 'mongoSecret'
+  name: secret.name
   properties: {
-    value: adminPassword
+    value: secret.value
   }
-}
+}]
 
 @description('This is the built-in Key Vault Administrator role. See https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-administrator')
 resource keyVaultAdministratorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
@@ -77,6 +81,6 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   properties: {
     roleDefinitionId: keyVaultAdministratorRoleDefinition.id
     principalId: objectId
-    principalType: 'ServicePrincipal'
+    principalType: principalType
   }
 }
