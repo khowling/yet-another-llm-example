@@ -74,7 +74,7 @@ $ vscode .
  of you want to run locally, follow 'Setup Dependencies Local,  for we will also need `mongodb` to store our data, and `azurite` blob storage emulator to store our images and documents.
 
 
-#### install mongodb
+#### Install mongodb
 
 If using Docker:
 
