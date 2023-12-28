@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./dist/app.js"
+    "start": "node -r dotenv/config ./dist/app.js"
   },
   "type": "module",
   "dependencies": {

@@ -31,7 +31,7 @@ To run this project, you will need a Linux environment with access to a command 
 
 Now, the application needs a `mongo database` for our business objects and trasactions, a `blob storage` for documents and images and a `few OpenAI services` for the chat experiance.  You can either run these in the cloud (recommended), or run them locally using local emulators (except for the AI dependencies of course). Follow `Setup Dependencies in Cloud (Azure)`, or, if you want to run locally, follow `Install depednecies locally`
 
-NOTE: If you have an Azure account already and your not familour with setting up a local laptop, is probably eisier to run the dependencies in your Azure subscription
+> NOTE: If you have an Azure account already or your not familour with installing packages in Linux (it gets involved), is probably eisier to run the dependencies in your Azure subscription
 
 ### Option1 : Setup Dependencies in Cloud (Azure)
 
@@ -39,7 +39,7 @@ This repo contains the nesassary scripts to setup all the dependencies you need 
 
 Ensure you have the Azure [`az cli`](https://learn.microsoft.com/cli/azure/install-azure-cli), installed, and its logged in (`az login`) with an account that has `owner` rights on the subscription.
 
-Now, assuming you have clones the repo locally, and have changed directory to the repo folder, just execute the following commands: 
+Now, assuming you have cloned the repo locally, and have changed directory to the repo folder, just execute the following commands set everything up and launch the app: 
 
 
 ```
@@ -50,13 +50,18 @@ bash setup/az.dependencies.sh 5a25 >app/shop/.env
 cd app/shop
 npm i
 npx tsx -r dotenv/config setup/init_config.ts
+
+# Build & run the app
+npx tsc
+npm start
 ```
 
-Now, all you should need to do is launch  `VSCode` from the repo folder and run the server:
+To run & debug the app in VSCode, launch  `VSCode` from the repo folder and run the server as shown in the image below:
 
 ```
 $ vscode .
 ```
+
 ![VSCode Debug](./docs/vscodedebug.png)
 
 
@@ -69,7 +74,7 @@ $ vscode .
  of you want to run locally, follow 'Setup Dependencies Local,  for we will also need `mongodb` to store our data, and `azurite` blob storage emulator to store our images and documents.
 
 
-### install mongodb
+#### install mongodb
 
 If using Docker:
 
@@ -90,15 +95,15 @@ NOTE: First time only, run to setup the replicaset (needed for the changefeed):
 mongosh --eval 'rs.initiate({ _id: "rs0", members: [ { _id: 0, host : "localhost:27017" }]})'
 ```
 
-### Install azurite
+#### Install azurite
 
 instructions here https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite?tabs=visual-studio-code%2Cblob-storage
 
-**WIP**
+**WIP**  This gets complex, with needing https and generate certs :( :(  not a great DX
 
 
 
-# Initialise the database and images
+#### Initialise the database and images
 
 
 NODE_TLS_REJECT_UNAUTHORIZED=0  node setup/init_config.js
