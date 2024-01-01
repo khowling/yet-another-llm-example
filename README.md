@@ -44,7 +44,7 @@ Now, assuming you have cloned the repo locally, and have changed directory to th
 
 ```
 # Run the Infrastructure templates to provision the dependencies in Azure
-bash setup/az.dependencies.sh 5a25 >app/shop/.env
+bash setup/azure/az.dependencies.sh 5a25 >app/shop/.env
 
 # Run the script to populated the database and storage with the demo catalog
 cd app/shop
