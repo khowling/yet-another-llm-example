@@ -1,8 +1,8 @@
 import createError from 'http-errors'
 import express, { Application, Request, Response } from 'express'
 import http from 'http'
-import bodyParser from 'body-parser'
-import path from 'path'
+import session, { Session }  from 'express-session'
+
 //var cookieParser = require('cookie-parser');
 //var logger = require('morgan');
 
@@ -13,6 +13,7 @@ import chatRouter from './routes/chat.js'
 
 
 import { MongoClient, ObjectId } from 'mongodb'
+import { type ChatRequestMessage } from '@azure/openai'
 
 const murl : string = process.env.AISHOP_MONGO_CONNECTION_STR || "mongodb://localhost:27017/azshop?replicaSet=rs0"
 const client = new MongoClient(murl);
@@ -35,12 +36,20 @@ app.set('view engine', 'ejs');
 
 //app.use(logger('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
 //app.use(cookieParser());
 app.use(express.static('./public'));
-app.use(bodyParser.json()) // for parsing application/json
-app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 
+
+
+//app.use(bodyParser.json()) // for parsing application/json
+//app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
+
+app.use(session({
+  secret: 'tempdemo',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }
+}))
 
 app.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
@@ -49,6 +58,7 @@ app.get('/', function(req, res, next) {
 app.get('/help', function(req, res, next) {
   res.render('help', { full: false });
 });
+
 
 app.get('/explore', async (req, res, next) => {
 
@@ -60,10 +70,13 @@ app.get('/explore', async (req, res, next) => {
 
 app.get('/explore/:category', async (req, res, next) => {
   const { category } = req.params;
+  const sess = req.session as CustomSessionData;
 
   try {
     const db = await getDb();
     const categories = await db.collection('products').find({ type:  "Product", category_id: new ObjectId(category)}).toArray()
+
+    sess.history = [...(sess.history || []), { role: 'user', content: `I'm looking at ${categories[0]?.heading}`}]
 
     res.render('products', { categories, imageBaseUrl });
   } catch (error: any) {
@@ -71,19 +84,48 @@ app.get('/explore/:category', async (req, res, next) => {
   }
 })
 
-app.get('/add/:productid', async (req, res, next) => {
+type Cart = {
+  [key: string]: number
+}
+
+
+export interface CustomSessionData extends Session {
+  cart: Array<{ product: any, quantity: number }>;
+  history: Array<ChatRequestMessage>
+}
+
+app.post('/add/:productid', async (req, res, next) => {
   const { productid } = req.params;
+  const sess = req.session as CustomSessionData;
 
   try {
     const db = await getDb();
     const product = await db.collection('products').findOne({ _id: new ObjectId(productid)})
 
-    res.render('textresponse', { question: "", answer: `${product?.heading} added to your cart` });
+    sess.cart = [{ product, quantity: 1}].concat(sess.cart || [])
+    sess.history = [...(sess.history || []), { role: 'user', content: `I added ${product?.heading}  to my cart`}]
+
+
+    res.render('textresponse', { question: "/add", answer: `${product?.heading} added to your cart` });
+
 
   } catch (error: any) {
     res.status(500).send(error);
   }
 })
+
+app.get('/cart', async (req, res, next) => {
+  const sess = req.session as CustomSessionData;
+  try {
+      //const db = await getDb();
+      //const cart = await db.collection('cart').find({}).toArray()
+  
+      res.render('cart', { cart: sess.cart, imageBaseUrl });
+  } catch (error: any) {
+      res.status(500).send(error);
+  }
+})
+
 
 
 app.use('/api/chat', chatRouter)

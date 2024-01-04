@@ -1,8 +1,13 @@
 import  { Router } from 'express'
 
 import { DefaultAzureCredential, AzureCliCredential } from '@azure/identity'
-import { OpenAIClient, AzureKeyCredential } from '@azure/openai'
+import { OpenAIClient, type ChatRequestMessage } from '@azure/openai'
 import { close } from 'fs';
+import { type CustomSessionData } from '../app';
+
+import bodyParser from 'body-parser'
+
+const formParser = bodyParser.urlencoded({ extended: true })
 
 const client = new OpenAIClient(process.env.AISHOP_OPENAI_ENDPOINT as string, new AzureCliCredential());
 const router = Router();
@@ -11,21 +16,19 @@ export default router;
 
 const chats : Array<{question: string, chatid: string, complete: boolean}>= [] 
 
-router.post('/request', (req, res) => {
+router.post('/request', formParser, (req, res) => {
     
-    //const { id } = req.params;
-    //const tweet = tweets.find(t => t.id === id);
-    //tweet.likes += 1;
-  
-    const chat = {
-        question: req.body.question,
-        chatid:  Date.now()+''+Math.floor(Math.random()*999),
-        complete: false
-    }
+    const sess = req.session as CustomSessionData;
+    sess.history = [...(sess.history || []), { role: 'user', content: req.body.question}]
+    const chatid =  sess.id + '-' + sess.history.length
     //console.log (chat)
-    chats.push(chat)
+    //chats.push(chat)
 
-    res.render ('llm', chat)
+    res.render ('llm', {
+        question: req.body.question,
+        chatid,
+        complete: false
+    })
   });
   
 
@@ -43,11 +46,11 @@ const closeCode = `
 /* GET home page. */
 router.get('/completion', async (req, res, next) => {
     const { chatid } = req.query as { chatid: string };
-        // Ask OpenAI for a streaming chat completion given the prompt
     
-    
-    const chatsidx = chats.findIndex(c => c.chatid === chatid)
-    const chat = chatsidx >= 0 ? chats[chatsidx] : undefined
+    const sess = req.session as CustomSessionData;
+
+    //const chatsidx = chats.findIndex(c => c.chatid === chatid)
+    //const chat = chatsidx >= 0 ? chats[chatsidx] : undefined
     
     const headers = {
         'Content-Type': 'text/event-stream',
@@ -57,23 +60,23 @@ router.get('/completion', async (req, res, next) => {
     res.writeHead(200, headers);
 
 
-    if (!chat) {
-        console.error('chat not found for ' + chatid);
-        res.write(`event: close${chatid}\n`);
-        res.end(`data: <div class="chat-bubble chat-bubble-warning">I'm not availabile right now, please continue to use the / commands to explore and order our products (${chatid} not found)</div>\n\n`);
-        return
-    } else {
+    //if (!chat) {
+    //    console.error('chat not found for ' + chatid);
+    //    res.write(`event: close${chatid}\n`);
+    //    res.end(`data: <div class="chat-bubble chat-bubble-warning">I'm not availabile right now, please continue to use the / commands to explore and order our products (${chatid} not found)</div>\n\n`);
+    //    return
+    //} else {
 
         try {
 
-            
-            res.write(`event: ${chat.chatid}\n`);
+            res.write(`event: ${chatid}\n`);
 
+            const prompt =  [
+                { role: "system", content: "You are a helpful canteen server called Tom, you are going to help customers choose the food avaiable, that inludes hot meals and sandwiches" },
+                ...sess.history
+            ] as Array<ChatRequestMessage>
 
-            const events = client.listChatCompletions(process.env.AISHOP_OPENAI_MODELNAME as string, [
-                { role: "system", content: "You are a helpful assistant. Respond as a tech influencer" },
-                { role: "user", content: chat.question }
-            ], { maxTokens: 256 });
+            const events = client.listChatCompletions(process.env.AISHOP_OPENAI_MODELNAME as string, prompt, { maxTokens: 256 });
 
             let response = '';
             let isopencode = false;
@@ -96,24 +99,26 @@ router.get('/completion', async (req, res, next) => {
                     }
                     response = response.replaceAll('\n', '<br/>')
 
-                    res.write(`event: ${chat.chatid}\n`);
+                    res.write(`event: ${chatid}\n`);
                     res.write(`data:  ${response}\n\n`);
                     
                 }
             }
+
+            sess.history = [...(sess.history || []), { role: 'system', content: response}]
             
-            res.write(`event: close${chat.chatid}\n`);
+            res.write(`event: close${chatid}\n`);
             res.end(`data: <div class="chat-bubble chat-bubble-info">${response}</div>\n\n`);
-            chats[chatsidx].complete = true
+
             //console.log (`completed: ${chatsidx}`)
 
         } catch (e: any) {
             console.error(e);
-            res.write(`event: close${chat.chatid}\n`);
+            res.write(`event: close${chatid}\n`);
             res.end(`data: <div class="chat-bubble chat-bubble-warning">I'm not availabile right now, please continue to use the / commands to explore and order our products (${JSON.stringify(e)})</div>\n\n`);
             return
         }
-    }
+    
         
 });
   

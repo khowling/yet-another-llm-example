@@ -42,6 +42,9 @@ Ensure you have the Azure [`az cli`](https://learn.microsoft.com/cli/azure/insta
 Now, assuming you have cloned the repo locally, and have changed directory to the repo folder, just execute the following commands set everything up and launch the app: 
 
 
+ > NOTE:
+ > you can either use the `setup/food.json` or `setup/bikes.json` arguments to the `init_config` below for different starting catalogs.
+
 ```
 # Run the Infrastructure templates to provision the dependencies in Azure
 bash setup/azure/az.dependencies.sh 5a25 >app/shop/.env
@@ -49,7 +52,7 @@ bash setup/azure/az.dependencies.sh 5a25 >app/shop/.env
 # Run the script to populated the database and storage with the demo catalog
 cd app/shop
 npm i
-npx tsx -r dotenv/config setup/init_config.ts
+npx tsx -r dotenv/config setup/init_config.ts setup/food.json
 
 # Build & run the app
 npx tsc
