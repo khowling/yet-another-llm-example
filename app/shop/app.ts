@@ -3,11 +3,19 @@ import express, { Application, Request, Response } from 'express'
 import http from 'http'
 import session, { Session }  from 'express-session'
 import chatRouter from './routes/chat.js'
-
+import { type TenentDefinition } from './setup/init_config'
 
 
 import { MongoClient, ObjectId } from 'mongodb'
 import { type ChatRequestMessage } from '@azure/openai'
+
+
+
+export interface CustomSessionData extends Session {
+  cart: Array<{ product: any, quantity: number }>;
+  history: Array<ChatRequestMessage>,
+  tenant: any
+}
 
 const murl : string = process.env.AISHOP_MONGO_CONNECTION_STR || "mongodb://localhost:27017/azshop?replicaSet=rs0"
 const client = new MongoClient(murl);
@@ -45,21 +53,24 @@ app.use(session({
   cookie: { secure: false }
 }))
 
-app.get('/', function(req, res, next) {
-  const tenant = app.get('tenant')
+app.get('/', async (req, res) => {
+  
+
+  const db = await getDb();
+  const tenant = await db.collection('tenant').findOne({}) as unknown as TenentDefinition
+
   const sess = req.session as CustomSessionData;
+  sess.tenant = tenant
   sess.history = [{ role: "system", content: tenant.aiSystemMessage }]
-  res.render('index', { tenant: app.get('tenant'), imageBaseUrl });
+
+  res.render('index', { tenant, imageBaseUrl });
 });
 
 app.get('/reset', function(req, res, next) {
   req.session.destroy(err => {
     res.setHeader('HX-Refresh', 'true')
-    //const tenant = app.get('tenant')
-    //const sess = req.session as CustomSessionData;
-    //sess.history = [{ role: "system", content: tenant.aiSystemMessage }]
     res.setHeader('HX-Redirect', '/')
-    return res.render('index', { tenant: app.get('tenant'), imageBaseUrl })
+    return res.end()//res.render('index', { tenant: app.get('tenant'), imageBaseUrl })
   })
 });
 
@@ -69,9 +80,9 @@ app.get('/help', function(req, res, next) {
 
 
 app.get('/explore', async (req, res, next) => {
-
+  const sess = req.session as CustomSessionData;
   const db = await getDb();
-  const categories = await db.collection('products').find({  partition_key: app.get('tenant').partition_key, type:  "Category"}).toArray()
+  const categories = await db.collection('products').find({  partition_key: sess.tenant.partition_key, type:  "Category"}).toArray()
 
   res.render('products', { categories, imageBaseUrl });
 })
@@ -82,7 +93,7 @@ app.get('/explore/:category', async (req, res, next) => {
 
   try {
     const db = await getDb();
-    const categories = await db.collection('products').find({ partition_key: app.get('tenant').partition_key, type:  "Product", category_id: new ObjectId(category)}).toArray()
+    const categories = await db.collection('products').find({ partition_key: sess.tenant.partition_key, type:  "Product", category_id: new ObjectId(category)}).toArray()
 
     sess.history = [...(sess.history || []), { role: 'user', content: `I'm looking at ${categories[0]?.heading}`}]
 
@@ -97,18 +108,13 @@ type Cart = {
 }
 
 
-export interface CustomSessionData extends Session {
-  cart: Array<{ product: any, quantity: number }>;
-  history: Array<ChatRequestMessage>
-}
-
 app.post('/add/:productid', async (req, res, next) => {
   const { productid } = req.params;
   const sess = req.session as CustomSessionData;
 
   try {
     const db = await getDb();
-    const product = await db.collection('products').findOne({ partition_key: app.get('tenant').partition_key, _id: new ObjectId(productid)})
+    const product = await db.collection('products').findOne({ partition_key: sess.tenant.partition_key, _id: new ObjectId(productid)})
 
     sess.cart = [{ product, quantity: 1}].concat(sess.cart || [])
     sess.history = [...(sess.history || []), { role: 'user', content: `I added ${product?.heading}  to my cart`}]
@@ -158,9 +164,6 @@ app.use((err: { message: any; status: any }, req: { app: { get: (arg0: string) =
 async function main() {
 
   try { 
-    const db = await getDb();
-    const tenant = await db.collection('tenant').findOne({})
-    app.set ('tenant', tenant)
 
     var port = normalizePort(process.env.PORT || '3000');
     app.set('port', port);

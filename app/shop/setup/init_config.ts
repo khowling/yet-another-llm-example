@@ -77,7 +77,7 @@ type ProductOrCategory = {
     }
 }
 
-type TenentDefinition = {
+export type TenentDefinition = {
     partition_key: string,
     name: string,
     welcomeMessage: string,
@@ -89,7 +89,7 @@ type TenentDefinition = {
     }
 }
 
-type ConfigData = {
+export type ConfigData = {
     tenant: TenentDefinition,
     images: { [pathname: string]: string },
     products: {
