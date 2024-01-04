@@ -70,6 +70,7 @@ resource mongoDB 'Microsoft.DocumentDB/databaseAccounts/mongodbDatabases@2023-04
 
 var azShopCollections = [
   'products'
+  'tenants'
 ]
 
 resource mongoColl 'Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections@2023-04-15' = [for collName in azShopCollections: {

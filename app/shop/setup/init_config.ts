@@ -20,18 +20,18 @@ const blobServiceClient = new BlobServiceClient(
 const containerClient = blobServiceClient.getContainerClient(process.env.AISHOP_IMAGE_CONTAINER || 'images');
 
 
-async function writeimages(partition_key : string, images: { [pathname: string]: string}) {
+async function writeimages(partition_key : string, images: { [pathname: string]: string}) : Promise<Map<string, {pathname: string}>> {
 
     const fileregex = /.+\.([^.]+$)/
     
-    let imagemap = new Map()
+    let imagemap = new Map<string, {pathname: string}>()
     for (const pathname of Object.keys(images)) {
 
         const b64 = Buffer.from(images[pathname], 'base64'),
             bstr = b64.toString('utf-8'),
             file_stream = Readable.from(bstr),
             extension = pathname.match(fileregex)?.[1],
-            filepath = `${partition_key}/${(new ObjectId()).toString()}.${extension}`
+            filepath = `${partition_key}/${pathname}`
 
         if (extension) {
             console.log(`writeimages writing ${filepath}`);
@@ -63,12 +63,10 @@ async function writeimages(partition_key : string, images: { [pathname: string]:
     return imagemap
 }
 
-
-//import { images, products } from './bikes.json'
-//import { TenentContext } from "../shop/ui/src/GlobalContexts";
-
 type ProductOrCategory = {
-    _id: string,
+    _id: ObjectId,
+    creation?: number,
+    partition_key?: string,
     type: "Product" | "Category",
     heading: string,
     description: string,
@@ -79,7 +77,19 @@ type ProductOrCategory = {
     }
 }
 
-type Catalog = {
+type TenentDefinition = {
+    partition_key: string,
+    name: string,
+    welcomeMessage: string,
+    description: string,
+    image: { 
+        pathname?: string, 
+        err?: any 
+    }
+}
+
+type ConfigData = {
+    tenant: TenentDefinition,
     images: { [pathname: string]: string },
     products: {
         Product: Array<ProductOrCategory>,
@@ -87,49 +97,18 @@ type Catalog = {
     }
 }
 
-async function populateTenent(db: mongoDB.Db, partition_key: string, catalogData: Catalog, catalogFilePath: string): Promise<void> { 
+async function populateTenent(db: mongoDB.Db, partition_key: string, catalogData: ConfigData, imagemap: Map<string, { pathname: string; }> ): Promise<void> { 
 
     const { Product, Category } = catalogData.products
-
-    // Cleardown, then Create the container, allowing public access to blobs
-
-    await containerClient.createIfNotExists({access: 'blob'});
-
-    const existingBlobs = containerClient.listBlobsFlat();
-    // now delete existing blobs
-    for await (const blob of existingBlobs) {
-        console.log(`Deleting existing old blob ${blob.name}`);
-        await containerClient.deleteBlob(blob.name);
-    }
-
-    const imagemap = await writeimages(partition_key, catalogData.images)
-
-    // async loop through the categories, creating new categories and products
-    for (const c of [...Category, ...Product]) {
-        if (c.image && c.image.pathname) {
-            if (!imagemap.has(c.image.pathname)) {
-                try {
-                    const filepath = `${catalogFilePath}/${c.image.pathname}`
-                    const blobpath = `${partition_key}/${c.image.pathname}`
-                    const blockBlobClient = containerClient.getBlockBlobClient(blobpath);
-                    console.log(`populateTenent: Uploading image ${filepath}`)
-                    await blockBlobClient.uploadFile(filepath);
-                    imagemap.set(c.image.pathname, { pathname: blobpath })
-                } catch (err: any) {
-                    console.error(`Cannot upload image pathname ${c.image.pathname} : ${JSON.stringify(err)}}`)
-                }
-            }
-        }
-    }
 
     const catmap = new Map()
     const newcats = Category.map((c) => {
         console.log(`populateTenent: Processing catalog ${c.heading}`)
         const old_id = c._id, new_id = new ObjectId()//.toHexString()
-        const newc = { ...c, _id: new_id, partition_key: partition_key, creation: Date.now() }
+        const newc: ProductOrCategory = { ...c, _id: new_id, partition_key: partition_key, creation: Date.now() }
         if (c.image && c.image.pathname) {
             if (imagemap.has(c.image.pathname)) {
-                newc.image = imagemap.get(c.image.pathname)
+                newc.image = imagemap.get(c.image.pathname) as { pathname: string}
             } else  {
                 console.error(`Cannot find image for Category ${c.heading}:  ${c.image.pathname}`)
             }
@@ -156,7 +135,7 @@ async function populateTenent(db: mongoDB.Db, partition_key: string, catalogData
         }
         if (p.image && p.image.pathname) {
             if (imagemap.has(p.image.pathname)) {
-                newp.image = imagemap.get(p.image.pathname)
+                newp.image = imagemap.get(p.image.pathname) as { pathname: string}
             } else  {
                 console.error(`Cannot find image for Product ${p.heading}:  ${p.image.pathname}`)
             }
@@ -184,25 +163,77 @@ async function populateTenent(db: mongoDB.Db, partition_key: string, catalogData
 */
 }
 
+async function loadBlobImages(partition_key: string, catalogData: ConfigData, catalogFilePath: string): Promise<Map<string, {pathname: string}>> {
+    // Cleardown, then Create the container, allowing public access to blobs
+
+    await containerClient.createIfNotExists({access: 'blob'});
+
+    const existingBlobs = containerClient.listBlobsFlat();
+    // now delete existing blobs
+    for await (const blob of existingBlobs) {
+        console.log(`loadBlobImages: Deleting existing old blob ${blob.name}`);
+        await containerClient.deleteBlob(blob.name);
+    }
+
+    let imagemap = new Map<string, {pathname: string}>()
+
+    console.log(`loadBlobImages: Loading inline images from json file...`)
+    const fileregex = /.+\.([^.]+$)/
+    for (const pathname of Object.keys(catalogData.images)) {
+
+        const b64 = Buffer.from(catalogData.images[pathname], 'base64'),
+            bstr = b64.toString('utf-8'),
+            file_stream = Readable.from(bstr),
+            extension = pathname.match(fileregex)?.[1],
+            filepath = `${partition_key}/${pathname}`
+
+        if (extension) {
+            console.log(`loadBlobImages:  writing ${filepath}`);
+            const bbClient = containerClient.getBlockBlobClient(filepath);
+            
+            try {
+                await bbClient.uploadData(b64, {
+                    blobHTTPHeaders: { blobContentType: `image/${extension}` },
+                    //abortSignal: AbortController.timeout(30 * 60 * 1000), // Abort uploading with timeout in 30mins
+                    onProgress: (ev) => console.log(ev)
+                });
+
+                console.log(`uploadStream succeeds, got ${bbClient.name}`);
+                imagemap.set(pathname, { pathname: bbClient.name })
+            } catch (err: any) {
+                console.log(
+                `uploadStream failed, requestId - ${err.details.requestId}, statusCode - ${err.statusCode}, errorCode - ${err.details.errorCode}`
+                );
+            }
+        } else {
+            console.error(`writeimages: cannoot find extension of image name ${pathname}`)
+        }
+
+    }
+
+
+    console.log(`loadBlobImages: Loading file images...`)
+    // loop through the tenant, products, categories, creating the images in blob
+    for (const c of [...catalogData.products.Category, ...catalogData.products.Product, catalogData.tenant]) {
+        if (c.image && c.image.pathname) {
+            if (!imagemap.has(c.image.pathname)) {
+                try {
+                    const filepath = `${catalogFilePath}/${c.image.pathname}`
+                    const blobpath = `${partition_key}/${c.image.pathname}`
+                    const blockBlobClient = containerClient.getBlockBlobClient(blobpath);
+                    console.log(`loadBlobImages: Uploading image ${filepath} to ${blobpath}`)
+                    await blockBlobClient.uploadFile(filepath);
+                    imagemap.set(c.image.pathname, { pathname: blobpath })
+                } catch (err: any) {
+                    console.error(`loadBlobImages: Cannot upload image pathname ${c.image.pathname} : ${JSON.stringify(err)}}`)
+                }
+            }
+        }
+    }
+
+    return imagemap
+}
     
-
-
-
-const PARTITION_KEY = 'root'
-interface TenentContext {
-    name: string;
-    image: { url: string };
-    inventory: boolean;
-    catalog: string;
-}
-
-const tenent_def: TenentContext = {
-    name: process.argv[2] || "Developer Local Test Store",
-    image: { url: process.argv[3] || 'https://assets.onestore.ms/cdnfiles/onestorerolling-1511-11008/shell/v3/images/logo/microsoft.png' },
-    inventory: true,
-    catalog: 'bike'
-}
-
 
 
 async function main(catalogfile: string): Promise<void> {
@@ -213,17 +244,27 @@ async function main(catalogfile: string): Promise<void> {
         console.log('Connected to the database, creating local developer tenent');
         
         const catalogFilePath = path.dirname(catalogfile)
-        const catalogData = JSON.parse(await fs.readFile(catalogfile, 'utf-8'))
+        const catalogData: ConfigData = JSON.parse(await fs.readFile(catalogfile, 'utf-8'))
 
         console.log(`Using Catalog file ${catalogfile} (relative path: ${catalogFilePath})`)
-        //await db.collection('business').deleteMany({partition_key: partition_key })
 
-    
-        // Create new details.
-        //const new_tenent = await db.collection('business').insertOne({ ...tenent_def, type: "business", partition_key: partition_key })
-        
-        // Perform database operations here
-        await populateTenent(db, PARTITION_KEY, catalogData, catalogFilePath);
+        const imagemap = await loadBlobImages(catalogData.tenant.partition_key, catalogData, catalogFilePath)
+
+        console.log (`Creating tenant... ${catalogData.tenant.name}`)
+
+        let tenant = {...catalogData.tenant}
+        if (tenant.image && tenant.image.pathname) {
+            if (imagemap.has(tenant.image.pathname)) {
+                tenant.image = imagemap.get(tenant.image.pathname) as { pathname: string}
+            } else {
+                console.error(`Cannot find image for Tenant ${tenant.name}:  ${tenant.image.pathname}`)
+            }
+        }
+        await db.collection('tenant').deleteMany({})
+        await db.collection('tenant').insertOne({ ...tenant })
+
+
+        await populateTenent(db, catalogData.tenant.partition_key, catalogData, imagemap);
 
     } catch (error) {
         console.error('Error connecting to the database or accessing the catalog file:', error);

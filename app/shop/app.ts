@@ -2,12 +2,6 @@ import createError from 'http-errors'
 import express, { Application, Request, Response } from 'express'
 import http from 'http'
 import session, { Session }  from 'express-session'
-
-//var cookieParser = require('cookie-parser');
-//var logger = require('morgan');
-
-//var indexRouter = require('./routes/index');
-//var usersRouter = require('./routes/users');
 import chatRouter from './routes/chat.js'
 
 
@@ -52,7 +46,14 @@ app.use(session({
 }))
 
 app.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+  res.render('index', { tenant: app.get('tenant'), imageBaseUrl });
+});
+
+app.get('/reset', function(req, res, next) {
+  req.session.destroy(err => {
+    res.setHeader('HX-Refresh', 'true')
+    return res.render('index', { tenant: app.get('tenant'), imageBaseUrl })
+  })
 });
 
 app.get('/help', function(req, res, next) {
@@ -63,7 +64,7 @@ app.get('/help', function(req, res, next) {
 app.get('/explore', async (req, res, next) => {
 
   const db = await getDb();
-  const categories = await db.collection('products').find({ type:  "Category"}).toArray()
+  const categories = await db.collection('products').find({  partition_key: app.get('tenant').partition_key, type:  "Category"}).toArray()
 
   res.render('products', { categories, imageBaseUrl });
 })
@@ -74,7 +75,7 @@ app.get('/explore/:category', async (req, res, next) => {
 
   try {
     const db = await getDb();
-    const categories = await db.collection('products').find({ type:  "Product", category_id: new ObjectId(category)}).toArray()
+    const categories = await db.collection('products').find({ partition_key: app.get('tenant').partition_key, type:  "Product", category_id: new ObjectId(category)}).toArray()
 
     sess.history = [...(sess.history || []), { role: 'user', content: `I'm looking at ${categories[0]?.heading}`}]
 
@@ -100,7 +101,7 @@ app.post('/add/:productid', async (req, res, next) => {
 
   try {
     const db = await getDb();
-    const product = await db.collection('products').findOne({ _id: new ObjectId(productid)})
+    const product = await db.collection('products').findOne({ partition_key: app.get('tenant').partition_key, _id: new ObjectId(productid)})
 
     sess.cart = [{ product, quantity: 1}].concat(sess.cart || [])
     sess.history = [...(sess.history || []), { role: 'user', content: `I added ${product?.heading}  to my cart`}]
@@ -127,7 +128,6 @@ app.get('/cart', async (req, res, next) => {
 })
 
 
-
 app.use('/api/chat', chatRouter)
 //app.use('/users', usersRouter);
 
@@ -148,81 +148,94 @@ app.use((err: { message: any; status: any }, req: { app: { get: (arg0: string) =
 });
 
 
+async function main() {
 
-var port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
+  try { 
+    const db = await getDb();
+    const tenant = await db.collection('tenant').findOne({})
+    app.set ('tenant', tenant)
 
-/**
- * Create HTTP server.
- */
+    var port = normalizePort(process.env.PORT || '3000');
+    app.set('port', port);
 
-var server = http.createServer(app);
+    /**
+     * Create HTTP server.
+     */
 
-/**
- * Listen on provided port, on all network interfaces.
- */
+    var server = http.createServer(app);
 
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
+    /**
+     * Listen on provided port, on all network interfaces.
+     */
 
-/**
- * Normalize a port into a number, string, or false.
- */
+    server.listen(port);
+    server.on('error', onError);
+    server.on('listening', onListening);
 
-function normalizePort(val : string) {
-  var port = parseInt(val, 10);
+    /**
+     * Normalize a port into a number, string, or false.
+     */
 
-  if (isNaN(port)) {
-    // named pipe
-    return val;
+    function normalizePort(val : string) {
+      var port = parseInt(val, 10);
+
+      if (isNaN(port)) {
+        // named pipe
+        return val;
+      }
+
+      if (port >= 0) {
+        // port number
+        return port;
+      }
+
+      return false;
+    }
+
+    /**
+     * Event listener for HTTP server "error" event.
+     */
+
+    function onError(error: any) {
+      if (error.syscall !== 'listen') {
+        throw error;
+      }
+
+      var bind = typeof port === 'string'
+        ? 'Pipe ' + port
+        : 'Port ' + port;
+
+      // handle specific listen errors with friendly messages
+      switch (error.code) {
+        case 'EACCES':
+          console.error(bind + ' requires elevated privileges');
+          process.exit(1);
+          break;
+        case 'EADDRINUSE':
+          console.error(bind + ' is already in use');
+          process.exit(1);
+          break;
+        default:
+          throw error;
+      }
+    }
+
+    /**
+     * Event listener for HTTP server "listening" event.
+     */
+
+    function onListening() {
+      var addr = server.address();
+      var bind = typeof addr === 'string'
+        ? 'pipe ' + addr
+        : 'port ' + addr?.port;
+      console.debug('Listening on ' + bind);
+    }
+  } catch (error: any) {
+    console.error(error);
   }
-
-  if (port >= 0) {
-    // port number
-    return port;
-  }
-
-  return false;
+  
 }
 
-/**
- * Event listener for HTTP server "error" event.
- */
-
-function onError(error: any) {
-  if (error.syscall !== 'listen') {
-    throw error;
-  }
-
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
-
-  // handle specific listen errors with friendly messages
-  switch (error.code) {
-    case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
-      process.exit(1);
-      break;
-    case 'EADDRINUSE':
-      console.error(bind + ' is already in use');
-      process.exit(1);
-      break;
-    default:
-      throw error;
-  }
-}
-
-/**
- * Event listener for HTTP server "listening" event.
- */
-
-function onListening() {
-  var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr?.port;
-  console.debug('Listening on ' + bind);
-}
+main()
 

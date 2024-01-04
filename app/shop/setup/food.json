@@ -1,4 +1,13 @@
 {
+    "tenant": {
+        "partition_key": "beachside",
+        "name": "Beachside Canteen",
+        "welcomeMessage": "Welcome to Beachside Canteen!",
+        "description": "We are a food ordering app that allows you to order food from a variety of restaurants and cuisines",
+        "image": {
+            "pathname": "food-images/canteen.jpg"
+        }
+    },
     "images": {},
     "products": {
         "Product": [
@@ -27,7 +36,7 @@
                 }
             },
             {
-                "_id": "5f524a71d9162b5c72877683",
+                "_id": "Steak1",
                 "type": "Product",
                 "heading": "Sirloin Steak",
                 "position": "normal",
@@ -36,6 +45,42 @@
                 "price": 2445,
                 "image": {
                     "pathname": "food-images/dinner-stake.jpg"
+                }
+            },
+            {
+                "_id": "salad1",
+                "type": "Product",
+                "heading": "Caesar Salad with Bacon and Flatbread",
+                "position": "normal",
+                "category_id": "s1",
+                "description": "A classic salad of crisp romaine lettuce tossed in a creamy Caesar dressing, topped with crunchy croutons, savory bacon bits, and freshly grated parmesan cheese",
+                "price": 2445,
+                "image": {
+                    "pathname": "food-images/snack-salad.jpg"
+                }
+            },
+            {
+                "_id": "cake1",
+                "type": "Product",
+                "heading": "Chocolate Cherry Cake with Creamy Layers",
+                "position": "normal",
+                "category_id": "s1",
+                "description": "A decadent dessert of moist chocolate sponge cake layered with smooth cream and topped with a rich chocolate sauce and chunks of cherries",
+                "price": 2445,
+                "image": {
+                    "pathname": "food-images/snack-cake.jpg"
+                }
+            },
+            {
+                "_id": "gronola1",
+                "type": "Product",
+                "heading": "Yogurt Parfait with Granola and Fruits",
+                "position": "normal",
+                "category_id": "b1",
+                "description": "A creamy yogurt parfait layered with crunchy granola and topped with a medley of fresh blueberries, red currants, and strawberries.",
+                "price": 2445,
+                "image": {
+                    "pathname": "food-images/breakfast-granola.jpg"
                 }
             }
         ],
