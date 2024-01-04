@@ -82,6 +82,7 @@ type TenentDefinition = {
     name: string,
     welcomeMessage: string,
     description: string,
+    aiSystemMessage: string,
     image: { 
         pathname?: string, 
         err?: any 

@@ -4,6 +4,7 @@
         "name": "Beachside Canteen",
         "welcomeMessage": "Welcome to Beachside Canteen!",
         "description": "We are a food ordering app that allows you to order food from a variety of restaurants and cuisines",
+        "aiSystemMessage": "You are a helpful canteen server called Tom, you are going to help customers choose the food avaiable, that inludes hot meals and sandwiches",
         "image": {
             "pathname": "food-images/canteen.jpg"
         }

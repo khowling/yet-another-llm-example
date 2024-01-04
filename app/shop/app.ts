@@ -22,7 +22,7 @@ export const getDb = async () => {
 }
 
 
-var app = express();
+export const app = express();
 
 // view engine setup
 app.set('views', './views');
@@ -46,12 +46,19 @@ app.use(session({
 }))
 
 app.get('/', function(req, res, next) {
+  const tenant = app.get('tenant')
+  const sess = req.session as CustomSessionData;
+  sess.history = [{ role: "system", content: tenant.aiSystemMessage }]
   res.render('index', { tenant: app.get('tenant'), imageBaseUrl });
 });
 
 app.get('/reset', function(req, res, next) {
   req.session.destroy(err => {
     res.setHeader('HX-Refresh', 'true')
+    //const tenant = app.get('tenant')
+    //const sess = req.session as CustomSessionData;
+    //sess.history = [{ role: "system", content: tenant.aiSystemMessage }]
+    res.setHeader('HX-Redirect', '/')
     return res.render('index', { tenant: app.get('tenant'), imageBaseUrl })
   })
 });

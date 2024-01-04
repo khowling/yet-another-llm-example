@@ -71,12 +71,7 @@ router.get('/completion', async (req, res, next) => {
 
             res.write(`event: ${chatid}\n`);
 
-            const prompt =  [
-                { role: "system", content: "You are a helpful canteen server called Tom, you are going to help customers choose the food avaiable, that inludes hot meals and sandwiches" },
-                ...sess.history
-            ] as Array<ChatRequestMessage>
-
-            const events = client.listChatCompletions(process.env.AISHOP_OPENAI_MODELNAME as string, prompt, { maxTokens: 256 });
+            const events = client.listChatCompletions(process.env.AISHOP_OPENAI_MODELNAME as string, sess.history, { maxTokens: 256 });
 
             let response = '';
             let isopencode = false;
