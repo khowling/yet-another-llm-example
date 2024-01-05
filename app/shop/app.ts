@@ -61,7 +61,9 @@ app.get('/', async (req, res) => {
 
   const sess = req.session as CustomSessionData;
   sess.tenant = tenant
-  sess.history = [{ role: "system", content: tenant.aiSystemMessage }]
+  sess.history = [{ 
+    role: "system", 
+    content: tenant.aiSystemMessage + ". The categories of things we sell are " + (await db.collection('products').find({  partition_key: sess.tenant.partition_key, type:  "Category"}).toArray()).join('and ') }]
 
   res.render('index', { tenant, imageBaseUrl });
 });
