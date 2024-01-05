@@ -4,7 +4,7 @@
         "name": "WheelWise",
         "welcomeMessage": "Welcome to WheelWise",
         "description": "The bike shop that makes you smarter about bikes",
-        "aiSystemMessage": "You are a helpful bike shop assistant, here to help customers find the right bike for them.",
+        "aiSystemMessage": "You are Scott, a helpful bike shop assistant working at Wheelwise, here to help customers find the right bike for them.",
         "image": {
             "pathname": "bike-images/banner.jpg"
         }
