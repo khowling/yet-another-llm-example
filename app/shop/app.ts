@@ -95,7 +95,7 @@ app.get('/explore/:category', async (req, res, next) => {
     const db = await getDb();
     const categories = await db.collection('products').find({ partition_key: sess.tenant.partition_key, type:  "Product", category_id: new ObjectId(category)}).toArray()
 
-    sess.history = [...(sess.history || []), { role: 'user', content: `I'm looking at ${categories[0]?.heading}`}]
+    sess.history = [...(sess.history || []), { role: 'user', content: `I'm looking at ${categories.map(c => c.heading).join('and ')}`}]
 
     res.render('products', { categories, imageBaseUrl });
   } catch (error: any) {
