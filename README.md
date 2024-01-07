@@ -47,7 +47,7 @@ Now, assuming you have cloned the repo locally, and have changed directory to th
 
 ```
 # Run the Infrastructure templates to provision the dependencies in Azure
-bash setup/azure/az.dependencies.sh 5a25 >app/shop/.env
+bash setup/azure/az.dependencies.sh >app/shop/.env
 
 # Run the script to populated the database and storage with the demo catalog
 cd app/shop
@@ -68,6 +68,13 @@ $ vscode .
 ![VSCode Debug](./docs/vscodedebug.png)
 
 
+## To Build and Deploy the App to Azure
+
+
+Build the container, and push to Azure Container Registry
+```
+(source app/shop/.env && az acr build -r $AISHOP_ACR_NAME -t aishop/shop:dev01  app/shop; )
+```
 
 **Any Issues, raise an Issue**
 

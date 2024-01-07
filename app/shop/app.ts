@@ -9,6 +9,18 @@ import { type TenentDefinition } from './setup/init_config'
 import { MongoClient, ObjectId } from 'mongodb'
 import { type ChatRequestMessage } from '@azure/openai'
 
+import { DefaultAzureCredential,  } from '@azure/identity';
+import { BlobServiceClient, StorageSharedKeyCredential, BlockBlobClient } from "@azure/storage-blob"
+
+
+const blobServiceClient = new BlobServiceClient(
+  process.env.AISHOP_STORAGE_ACCOUNT ?  `https://${process.env.AISHOP_STORAGE_ACCOUNT}.blob.core.windows.net` : 'https://127.0.0.1:10000/devstoreaccount1',
+  new DefaultAzureCredential()
+);
+
+const containerClient = blobServiceClient.getContainerClient(process.env.AISHOP_IMAGE_CONTAINER || 'images');
+
+
 
 
 export interface CustomSessionData extends Session {
@@ -20,7 +32,7 @@ export interface CustomSessionData extends Session {
 const murl : string = process.env.AISHOP_MONGO_CONNECTION_STR || "mongodb://localhost:27017/azshop?replicaSet=rs0"
 const client = new MongoClient(murl);
 
-const imageBaseUrl = process.env.AISHOP_STORAGE_ACCOUNT ? `https://${process.env.AISHOP_STORAGE_ACCOUNT}.blob.core.windows.net/${process.env.AISHOP_IMAGE_CONTAINER}` : `https://127.0.0.1:10000/devstoreaccount1/${process.env.AISHOP_IMAGE_CONTAINER}`
+const imageBaseUrl = '/file' // process.env.AISHOP_STORAGE_ACCOUNT ? `https://${process.env.AISHOP_STORAGE_ACCOUNT}.blob.core.windows.net/${process.env.AISHOP_IMAGE_CONTAINER}` : `https://127.0.0.1:10000/devstoreaccount1/${process.env.AISHOP_IMAGE_CONTAINER}`
 
  
 export const getDb = async () => {
@@ -63,7 +75,7 @@ app.get('/', async (req, res) => {
   sess.tenant = tenant
   sess.history = [{ 
     role: "system", 
-    content: tenant.aiSystemMessage + ". The categories of things we sell are " + (await db.collection('products').find({  partition_key: sess.tenant.partition_key, type:  "Category"}).toArray()).join('and ') }]
+    content: tenant.aiSystemMessage + ". The categories of things we sell are " + (await db.collection('products').find({  partition_key: sess.tenant.partition_key, type:  "Category"}).toArray()).map(c => c.heading).join('and ') }]
 
   res.render('index', { tenant, imageBaseUrl });
 });
@@ -75,6 +87,18 @@ app.get('/reset', function(req, res, next) {
     return res.end()//res.render('index', { tenant: app.get('tenant'), imageBaseUrl })
   })
 });
+
+// Question if browser should download from the storage account directly, or if the app should proxy the download
+app.get('/file/*', async (req, res)  =>{
+  const filepath = (req.params as { [key: string]: string })[0];
+  try {
+    const blobClient = containerClient.getBlobClient(filepath);
+    const dl = await blobClient.download()
+    dl.readableStreamBody?.pipe(res)
+  } catch (e: any) {
+    res.status(500).send(e.message);
+  } 
+})
 
 app.get('/help', function(req, res, next) {
   res.render('help', { full: false });

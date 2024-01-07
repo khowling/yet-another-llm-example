@@ -43,6 +43,16 @@ module keyvault './keyvault.bicep' = if (empty(objectId)) {
   }
 }
 
+module acr './acr.bicep' = {
+  name: 'deploy-acr'
+  params: {
+    uniqueName: uniqueName
+    location: location
+    objectId: principalId
+    principalType: principalType
+  }
+}
+
 // module mongov6 './mongov6.bicep' = {
 //   name: 'deploy-mongov6'
 //   params: {
@@ -83,7 +93,18 @@ module openai 'ai.bicep' = {
   }
 }
 
+module containerapps 'containerapps.bicep' = {
+  name: 'deploy-containerapps'
+  params: {
+    uniqueName: uniqueName
+    location: location
+    objectId: principalId
+    principalType: principalType
+  }
+}
+
 output cosmosConnectionURL string = cosmosMongo42.outputs.cosmosConnectionURL
 output storageAccountName string = storage.outputs.storageAccountName
 output openAIEndpoint string = openai.outputs.openAIEndpoint
 output openAIModel string = openai.outputs.openAIModel
+output acrName string = acr.outputs.acrName

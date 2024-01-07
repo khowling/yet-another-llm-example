@@ -6,6 +6,16 @@ param uniqueName string
 @description('Location for the cluster.')
 param location string = resourceGroup().location
 
+@description('Specifies the object ID of a user, service principal or security group in the Azure Active Directory tenant for the vault. The object ID must be unique for the list of access policies. Get it by using Get-AzADUser or Get-AzADServicePrincipal cmdlets.')
+param objectId string
+
+@description('principle type')
+@allowed([
+  'User'
+  'ServicePrincipal'
+])
+param principalType string 
+
 
 resource Vnet 'Microsoft.Network/virtualNetworks@2020-11-01' = {
   name: '${uniqueName}-net'
@@ -45,7 +55,7 @@ resource AcaEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' = {
 
       // the environment only has an internal load balancer. 
       // These environments do not have a public static IP resource.
-      internal: true
+      internal: false
     }
     workloadProfiles: [
       {
@@ -57,11 +67,18 @@ resource AcaEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' = {
   }
 }
 
+
 resource containerapp 'Microsoft.App/containerApps@2023-05-01' = {
   name: '${uniqueName}-hello'
   location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${objectId}': {}
+    }
+  }
   properties: {
-    managedEnvironmentId: AcaEnvironment.id
+    environmentId: AcaEnvironment.id
     configuration: {
       ingress: {
 
@@ -76,7 +93,7 @@ resource containerapp 'Microsoft.App/containerApps@2023-05-01' = {
       containers: [
         {
           image: 'nginxdemos/hello'
-          name: 'hello'
+          name: 'placeholder'
         }
       ]
     }
