@@ -84,3 +84,12 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
     principalType: principalType
   }
 }
+
+
+output keyVaultUrl string = kv.properties.vaultUri
+output secretUris array = [for (secret, i) in secrets:  {
+  name: secret.name
+  secretUri: kvsecrets[i].properties.secretUri
+}]
+
+

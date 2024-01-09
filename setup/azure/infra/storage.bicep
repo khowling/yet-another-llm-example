@@ -10,6 +10,14 @@ param location string = resourceGroup().location
 @description('Specifies the object ID of a user, service principal or security group in the Azure Active Directory tenant for the vault. The object ID must be unique for the list of access policies. Get it by using Get-AzADUser or Get-AzADServicePrincipal cmdlets.')
 param objectId string
 
+@description('Blob public access settting')
+@allowed([
+  'None'
+  'Blob'
+  'Container'
+])
+param publicAccess string = 'None'
+
 @description('principle type')
 @allowed([
   'User'
@@ -17,7 +25,8 @@ param objectId string
 ])
 param principalType string 
 
-
+@description('Array of Blob container names to create')
+param blobContainers array
 
 //-----------------Storage Account Construction-----------------
 resource StorageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
@@ -40,19 +49,13 @@ resource StorageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
       }
     }
   
-    resource images 'containers' = {
-      name: 'images'
+    resource containers 'containers'  = [for container in blobContainers: {
+      name: container.name
       properties: {
-        publicAccess: 'Blob'
+        publicAccess: publicAccess
       }
-    }
-    
-    resource uploads 'containers' = {
-      name: 'uploads'
-      properties: {
-        publicAccess: 'None'
-      }
-    }
+    }]
+
   }
 }
 

@@ -4,8 +4,8 @@
 param uniqueName string
 
 
-@description('Object ID of the user to be given role assignments, if none is provided, a managed identity will be created.')
-param objectId string = ''
+@description('Object ID of a developer user to be given role assignments, to allow the app to be ran locally with dependencies in Azure')
+param userObjectId string = ''
 
 @description('Location for the cluster.')
 param location string = resourceGroup().location
@@ -21,25 +21,26 @@ param location string = resourceGroup().location
 
 
 // If we havnt passed in an identity to create permissions against, create one
-resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = if(empty(objectId)) {
+resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
   name: 'aishop-${uniqueName}'
   location: location
 }
 
-var principalId = empty(objectId)? managedIdentity.properties.principalId: objectId
-var principalType = empty(objectId)? 'ServicePrincipal' : 'User'
+//var principalId = empty(objectId)? managedIdentity.properties.principalId: objectId
+//var principalType = empty(objectId)? 'ServicePrincipal' : 'User'
 
-module keyvault './keyvault.bicep' = if (empty(objectId)) {
+module keyvault './keyvault.bicep' =  {
   name: 'deploy-keyvault'
   params: {
     uniqueName: uniqueName
     location: location
     secrets: [{
-      name: 'cosmosConnectionURL'
+      env: 'AISHOP_MONGO_CONNECTION_STR'
+      name: 'cosmos-connection'
       value: cosmosMongo42.outputs.cosmosConnectionURL
     }]
-    objectId: principalId
-    principalType: principalType
+    objectId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
   }
 }
 
@@ -48,8 +49,8 @@ module acr './acr.bicep' = {
   params: {
     uniqueName: uniqueName
     location: location
-    objectId: principalId
-    principalType: principalType
+    objectId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
   }
 }
 
@@ -72,24 +73,32 @@ module cosmosMongo42 './cosmos-mongo42.bicep' = {
   }
 }
 
+var blobImageContainerName = 'images'
 
 module storage 'storage.bicep' = {
   name: 'deploy-storage'
   params: {
     uniqueName: uniqueName
     location: location
-    objectId: principalId
-    principalType: principalType
+    blobContainers: [
+      {
+        name: blobImageContainerName
+      }
+    ]
+    objectId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
   }
 }
 
+var modelName = 'gpt-35-turbo'
 module openai 'ai.bicep' = {
   name: 'deploy-ai'
   params: {
     uniqueName: uniqueName
     location: location
-    objectId: principalId
-    principalType: principalType
+    modelName: modelName
+    objectId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
   }
 }
 
@@ -98,8 +107,28 @@ module containerapps 'containerapps.bicep' = {
   params: {
     uniqueName: uniqueName
     location: location
-    objectId: principalId
-    principalType: principalType
+    managedIdentityId: managedIdentity.id
+    acrName: acr.outputs.acrName
+    acrImage: acr.outputs.acrImage
+    kvSecretUris: keyvault.outputs.secretUris
+    env: [
+      {
+        name: 'AISHOP_STORAGE_ACCOUNT'
+        value: storage.outputs.storageAccountName
+      }
+      {
+        name: 'AISHOP_OPENAI_ENDPOINT'
+        value: openai.outputs.openAIEndpoint
+      }
+      {
+        name: 'AISHOP_OPENAI_MODELNAME'
+        value: modelName
+      }
+      {
+        name: 'AISHOP_IMAGE_CONTAINER'
+        value: blobImageContainerName
+      }
+    ]
   }
 }
 

@@ -6,13 +6,13 @@ uniqueName=${1:-$(printf '%x' $RANDOM)}
 rgName="aishop-${uniqueName}"
 
 # Get signed in user objectId (PrincipalId)...
-objectId=$(az ad signed-in-user show --query id -o tsv)
+userObjectId=$(az ad signed-in-user show --query id -o tsv)
 
 # Create resource group...
 az group create -n $rgName -l westeurope >/dev/null
 
 # Deploy infra...
-DEPLOY_OUTPUT=$(az deployment group create -g $rgName  --template-file ./setup/azure/infra/main.bicep  --parameters uniqueName=${uniqueName} objectId=${objectId} --query [properties.outputs.cosmosConnectionURL.value,properties.outputs.storageAccountName.value,properties.outputs.openAIEndpoint.value,properties.outputs.openAIModel.value,properties.outputs.acrName.value] -o tsv)
+DEPLOY_OUTPUT=$(az deployment group create -g $rgName  --template-file ./setup/azure/infra/main.bicep  --parameters uniqueName=${uniqueName} userObjectId=${userObjectId} --query [properties.outputs.cosmosConnectionURL.value,properties.outputs.storageAccountName.value,properties.outputs.openAIEndpoint.value,properties.outputs.openAIModel.value,properties.outputs.acrName.value] -o tsv)
 
 # Set env vars...
 export AISHOP_MONGO_CONNECTION_STR=$(echo $DEPLOY_OUTPUT | cut -f 1 -d ' ')
