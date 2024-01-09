@@ -111,7 +111,7 @@ module containerapps 'containerapps.bicep' = {
     acrName: acr.outputs.acrName
     acrImage: acr.outputs.acrImage
     kvSecretUris: keyvault.outputs.secretUris
-    env: [
+    envConfig: [
       {
         name: 'AISHOP_STORAGE_ACCOUNT'
         value: storage.outputs.storageAccountName

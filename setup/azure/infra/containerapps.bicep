@@ -28,7 +28,7 @@ param acrName string
 param acrImage string
 
 @description('Environment Config')
-param env array
+param envConfig array
 
 @description('Key Vault Secret Uris')
 param kvSecretUris array
@@ -128,7 +128,7 @@ resource containerapp 'Microsoft.App/containerApps@2023-05-01' = {
         {
           image: acrImage
           name: 'ui'
-          env: concat(env, map(kvSecretUris, (kvSecretUri) => {
+          env: concat(envConfig, map(kvSecretUris, (kvSecretUri) => {
               name: kvSecretUri.env
               secretRef: kvSecretUri.name
           }))
