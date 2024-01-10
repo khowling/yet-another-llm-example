@@ -135,6 +135,7 @@ module containerapps 'containerapps.bicep' = {
       }
       {
         // Required for the @azure/identity DefaultAzureCredential
+        // See https://github.com/microsoft/azure-container-apps/issues/325#issuecomment-1265380377
         name: 'AZURE_CLIENT_ID'
         value: managedIdentity.properties.clientId
       }
