@@ -46,7 +46,7 @@ resource OpenAI 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
       model: {
         name: modelName
         format: 'OpenAI'
-        version: '0301'
+        //version: '0301'
       }
     }
     sku: {
