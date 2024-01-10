@@ -12,6 +12,7 @@ COPY --from=build-env /app/dist ./dist
 COPY --from=build-env /app/node_modules ./node_modules
 COPY public ./public
 COPY views ./views
+COPY setup ./setup
 COPY package.json ./
 
 ENV NODE_ENV="production"

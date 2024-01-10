@@ -9,7 +9,7 @@ import bodyParser from 'body-parser'
 
 const formParser = bodyParser.urlencoded({ extended: true })
 
-const client = new OpenAIClient(process.env.AISHOP_OPENAI_ENDPOINT as string, new AzureCliCredential());
+const client = new OpenAIClient(process.env.AISHOP_OPENAI_ENDPOINT as string, new DefaultAzureCredential());
 const router = Router();
 
 export default router;

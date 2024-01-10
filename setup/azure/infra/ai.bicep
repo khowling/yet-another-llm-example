@@ -20,6 +20,9 @@ param principalType string
 @description('Specifies the name of the model to deploy')
 param modelName string = 'gpt-35-turbo'
 
+// https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models#gpt-35-turbo-model-availability
+@description('Specifies the version of the model to deploy, see https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models#gpt-35-turbo-model-availability')
+param modelVersion string = '1106'
 
 var openAIName = 'aishop-${uniqueName}'
 //---------OpenAI Construction---------
@@ -46,7 +49,7 @@ resource OpenAI 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
       model: {
         name: modelName
         format: 'OpenAI'
-        //version: '0301'
+        version: modelVersion 
       }
     }
     sku: {

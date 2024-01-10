@@ -276,12 +276,16 @@ export async function initCatalog(catalogfile: string): Promise<void> {
 }
 
 // Get the command line argument
-const arg = process.argv[2];
 
-if (!arg) {
-    console.error('Usage: node init_config.js <catalogfile.json>');
-    process.exit(1);
+if (process.argv[1].endsWith('init_config.js')) {
+    if (!process.argv[2]) {
+        console.error('Usage: node init_config.js <catalogfile.json>');
+        process.exit(1);
+    }
+    initCatalog(process.argv[2])
 }
 
-initCatalog(arg)
+
+
+
 

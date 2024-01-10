@@ -90,13 +90,18 @@ module storage 'storage.bicep' = {
   }
 }
 
+// https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models#gpt-35-turbo-model-availability
 var modelName = 'gpt-35-turbo'
+var westUSModelVersion = '1106'
+var westEUModelVersion = '0301'
+
 module openai 'ai.bicep' = {
   name: 'deploy-ai'
   params: {
     uniqueName: uniqueName
     location: location
     modelName: modelName
+    modelVersion: westEUModelVersion
     objectId: managedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }
@@ -127,6 +132,11 @@ module containerapps 'containerapps.bicep' = {
       {
         name: 'AISHOP_IMAGE_CONTAINER'
         value: blobImageContainerName
+      }
+      {
+        // Required for the @azure/identity DefaultAzureCredential
+        name: 'AZURE_CLIENT_ID'
+        value: managedIdentity.properties.clientId
       }
     ]
   }
