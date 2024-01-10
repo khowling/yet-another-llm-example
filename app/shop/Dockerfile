@@ -7,9 +7,12 @@ RUN npm i && npx tsc
 
 # Create final production stage
 FROM node:lts AS run-env
-WORKDIR /usr/app
-COPY --from=build-env /app/dist /app/node_modules
-COPY package.json public views ./
+WORKDIR /app
+COPY --from=build-env /app/dist ./dist
+COPY --from=build-env /app/node_modules ./node_modules
+COPY public ./public
+COPY views ./views
+COPY package.json ./
 
 ENV NODE_ENV="production"
 EXPOSE 3000

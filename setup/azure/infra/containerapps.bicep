@@ -120,7 +120,7 @@ resource containerapp 'Microsoft.App/containerApps@2023-05-01' = {
         external: true
         allowInsecure: true
         transport: 'http'
-        targetPort: 80
+        targetPort: 3000
       }
     }
     template: {

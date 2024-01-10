@@ -76,6 +76,13 @@ Build the container, and push to Azure Container Registry
 (source app/shop/.env && az acr build -r $AISHOP_ACR_NAME -t aishop/shop:dev01  app/shop; )
 ```
 
+
+```
+# As a example to build locally (if you have docker installed)
+docker build -t shop app/shop
+docker run -it --entrypoint /bin/sh shop:latest
+```
+
 **Any Issues, raise an Issue**
 
 
