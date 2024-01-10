@@ -139,8 +139,8 @@ resource containerapp 'Microsoft.App/containerApps@2023-05-01' = {
         }
       ]
       scale: {
-        maxReplicas: 1
-        minReplicas: 2
+        maxReplicas: 2
+        minReplicas: 1
       }
     }
     workloadProfileName: 'Consumption'
