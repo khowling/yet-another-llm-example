@@ -3,7 +3,7 @@ import express, { Application, Request, Response } from 'express'
 import http from 'http'
 import session, { Session }  from 'express-session'
 import chatRouter from './routes/chat.js'
-import { type TenentDefinition, initCatalog } from './setup/init_config'
+import { type TenentDefinition, initCatalog } from './setup/init_config.js'
 
 
 import { MongoClient, ObjectId } from 'mongodb'
