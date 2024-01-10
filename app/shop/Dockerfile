@@ -6,7 +6,7 @@ WORKDIR /app
 RUN npm i && npx tsc
 
 # Create final production stage
-FROM node:lts-slim AS run-env
+FROM node:lts AS run-env
 WORKDIR /usr/app
 COPY --from=build-env /app/dist /app/node_modules
 COPY package.json public views ./
