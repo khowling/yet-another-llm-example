@@ -2,7 +2,7 @@
 #set -x
 
 
-uniqueName=${1:-$(printf '%x' $RANDOM)}
+uniqueName=${1:-$(printf '%05x' $RANDOM)}
 rgName="aishop-${uniqueName}"
 
 # Get signed in user objectId (PrincipalId)...
