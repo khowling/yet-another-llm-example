@@ -101,7 +101,7 @@ module openai 'ai.bicep' = {
     uniqueName: uniqueName
     location: location
     modelName: modelName
-    modelVersion: westEUModelVersion
+    modelVersion: location == 'westeurope' ? westEUModelVersion : westUSModelVersion
     objectId: managedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }
