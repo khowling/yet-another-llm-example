@@ -19,7 +19,44 @@ The other principles this repo upholds are:
 
 ![App](./docs/app.jpg)
 
-## To run the project
+## To run the project in your Azure Subscription (easiest way to get a demo running)
+
+The project repo contains a full IaC (Infra-as-Code) to bootstrap the demo into your Azure subscription.  The IaC files provisiones all the resources you need to run the project, builds the container (using the amazing ACR build task), and deploys to Azure Container Apps.
+
+The esiest way to deploy is using the *Azure Cloud shell*, as this has all the dependencies you will need already installed, like `git` `az cli` etc.
+
+* **Step 1** : goto [Azure Cloud Shell](https://shell.azure.com), and once you have a `$` prompt,
+
+* **Step 2** : Copy and Paste this to clone the repo to your cloud shell
+```sh
+git clone https://github.com/khowling/ai-shop.git
+```
+* **Step 3** : Run the following Azure CLI commands to deploy the services and app. NOTE: feel free to change the `westeurope` to the region of your choice
+```sh
+# Change to project directory
+cd ai-shop
+
+# Generate a unique name for the deployment, some Azure resources need globally unique names :(
+uniqueName=$(printf '%05x' $RANDOM)
+rgName="aishop-${uniqueName}"
+
+# Create resource group...
+az group create -n $rgName -l westeurope
+
+# Deploy ...
+az deployment group create -g $rgName  --template-file ./setup/azure/infra/main.bicep  --parameters uniqueName=${uniqueName}
+```
+
+You should see a `/ Running ..` prompt, that, if all goes well, in about 5minutes to complete successfully
+
+* **Step** 4 : Go Look at your app, and open it in a browser.  
+   * Open `portal.azure.com`, and you should see a new resource group called `aishop-xxxxx` containing this:
+   ![Resources](./docs/azresources.png)
+   * Navigate to the `aishop` `Container App` resource
+   * Click on the `Application Url` in the top right conner of the overview tab.  You should see your app.
+
+
+## To run the project locally on your laptop (just like a pro-dev)
 
 To run this project, you will need a Linux environment with access to a command shell with `nodejs`. If using Mac, this should be no problem, if using a Windows laptop, use the default Ubuntu distribution on the amazing `WSL`:
 

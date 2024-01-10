@@ -130,7 +130,7 @@ resource containerapp 'Microsoft.App/containerApps@2023-05-01' = {
           name: 'ui'
           resources: {
             cpu: 1
-            memory: '2'
+            memory: '2Gi'
           }
           env: concat(envConfig, map(kvSecretUris, (kvSecretUri) => {
               name: kvSecretUri.env
