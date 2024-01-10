@@ -16,4 +16,4 @@ COPY package.json ./
 
 ENV NODE_ENV="production"
 EXPOSE 3000
-CMD ["node", "./dist/app.js", ]
+CMD ["node", "./dist/app.js"]
