@@ -237,7 +237,7 @@ async function loadBlobImages(partition_key: string, catalogData: ConfigData, ca
     
 
 
-async function main(catalogfile: string): Promise<void> {
+export async function initCatalog(catalogfile: string): Promise<void> {
     
     try {
         await client.connect();
@@ -283,5 +283,5 @@ if (!arg) {
     process.exit(1);
 }
 
-main(arg)
+initCatalog(arg)
 

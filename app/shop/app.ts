@@ -3,7 +3,7 @@ import express, { Application, Request, Response } from 'express'
 import http from 'http'
 import session, { Session }  from 'express-session'
 import chatRouter from './routes/chat.js'
-import { type TenentDefinition } from './setup/init_config'
+import { type TenentDefinition, initCatalog } from './setup/init_config'
 
 
 import { MongoClient, ObjectId } from 'mongodb'
@@ -190,6 +190,13 @@ app.use((err: { message: any; status: any }, req: { app: { get: (arg0: string) =
 async function main() {
 
   try { 
+
+    const db = await getDb();
+    const tenant = await db.collection('tenant').findOne({}) as unknown as TenentDefinition
+    if (!tenant) {
+      await initCatalog('setup/food.json')
+    }
+  
 
     var port = normalizePort(process.env.PORT || '3000');
     app.set('port', port);
