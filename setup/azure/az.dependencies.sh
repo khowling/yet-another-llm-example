@@ -1,15 +1,15 @@
 #!/bin/sh
 #set -x
+location=${1:-"westeurope"}
 
-
-uniqueName=${1:-$(printf '%05x' $RANDOM)}
+uniqueName=${2:-$(printf '%05x' $RANDOM)}
 rgName="aishop-${uniqueName}"
 
 # Get signed in user objectId (PrincipalId)...
 userObjectId=$(az ad signed-in-user show --query id -o tsv)
 
 # Create resource group...
-az group create -n $rgName -l westus >/dev/null
+az group create -n $rgName -l $location >/dev/null
 
 # Deploy infra...
 DEPLOY_OUTPUT=$(az deployment group create -g $rgName  --template-file ./setup/azure/infra/main.bicep  --parameters uniqueName=${uniqueName} userObjectId=${userObjectId} --query [properties.outputs.cosmosConnectionURL.value,properties.outputs.storageAccountName.value,properties.outputs.openAIEndpoint.value,properties.outputs.openAIModel.value,properties.outputs.acrName.value] -o tsv)
