@@ -56,7 +56,7 @@ You should see a `/ Running ..` prompt, that, if all goes well, in about 5minute
    * Click on the `Application Url` in the top right conner of the overview tab.  You should see your app.
 
 
-## To run the project locally on your laptop (just like a pro-dev)
+## To run the project locally on your laptop (If you want to change/contribute)
 
 To run this project, you will need a Linux environment with access to a command shell with `nodejs`. If using Mac, this should be no problem, if using a Windows laptop, use the default Ubuntu distribution on the amazing `WSL`:
 
@@ -66,25 +66,26 @@ To run this project, you will need a Linux environment with access to a command 
 
 ### Dependencies
 
-Now, the application needs a `mongo database` for our business objects and trasactions, a `blob storage` for documents and images and a `few OpenAI services` for the chat experiance.  You can either run these in the cloud (recommended), or run them locally using local emulators (except for the AI dependencies of course). Follow `Setup Dependencies in Cloud (Azure)`, or, if you want to run locally, follow `Install depednecies locally`
+Now, the application needs a `mongo database` for our business objects and trasactions, a `blob storage` for documents and images and a `few OpenAI services` for the chat experiance.  You can either run these in the cloud (recommended), or run them locally using local emulators (except for the AI dependencies of course). Follow `Option1 : Run app locally with Dependencies in Cloud`, or, if you want to run locally, follow `Option 2 : Install depednecies locally`
 
-> NOTE: If you have an Azure account already or your not familour with installing packages in Linux (it gets involved), is probably eisier to run the dependencies in your Azure subscription
+> NOTE: If you have an Azure account already or your not familour with installing packages in Linux (it gets involved), is probably easier to run the dependencies in your Azure subscription
 
-### Option1 : Setup Dependencies in Cloud (Azure)
+### Option1 : Run app locally with Dependencies in Cloud (Azure)
 
-This repo contains the nesassary scripts to setup all the dependencies you need to run this app, in Azure, at the same time, it creates a local `.env` file will all the nesaccary connection details for the app to run locally, with the dependencies running in Azure.
+This repo contains the nesassary scripts to setup all the Azure dependencies you need to run this app. It also creates a local `.env` file will all the nesaccary connection details for the app to run locally, with the dependencies running in Azure.
 
 Ensure you have the Azure [`az cli`](https://learn.microsoft.com/cli/azure/install-azure-cli), installed, and its logged in (`az login`) with an account that has `owner` rights on the subscription.
 
 Now, assuming you have cloned the repo locally, and have changed directory to the repo folder, just execute the following commands set everything up and launch the app: 
 
-
- > NOTE:
- > you can either use the `setup/food.json` or `setup/bikes.json` arguments to the `init_config` below for different starting catalogs.
+ > NOTE: If you have already followed the 4 steps to deploy the app to Azure at the top of this README, and would like to re-use the same dependencies when you are running locally (recommended),  ensure you specify the same region and set the same `uniqueName` as the  5 digit unique string that was generated during the initial deployment
+ > ```sh
+ > uniqueName=xxxxx
+ > ``` 
 
 ```
 # Run the Infrastructure templates to provision the dependencies in Azure
-bash setup/azure/az.dependencies.sh westeurope >app/shop/.env
+bash setup/azure/az.dependencies.sh westeurope $uniqueName >app/shop/.env
 
 # Build & run the app
 cd app/shop
@@ -93,11 +94,8 @@ npx tsc
 npm start
 ```
 
-Or, to run & debug the app in VSCode, launch  `VSCode` from the repo folder and run the server as shown in the image below:
+To run & debug the app in VSCode, launch  `VSCode`, and using the `WSL Remote` extension, open the WLS folder where the project is cloned, and run the server as shown in the image below:
 
-```
-$ vscode .
-```
 
 ![VSCode Debug](./docs/vscodedebug.png)
 
@@ -106,30 +104,33 @@ $ vscode .
 
 Use this command to load in a new configuration, or update the existing config.  Including Catalog Items, AI System prompt, branding etc
 
+ > NOTE:
+ > you can either use the `setup/food.json` or `setup/bikes.json` arguments to the `init_config` below for different starting catalogs.
+
 ```
 # Run the script to populated the database and storage with the demo catalog
 npx tsx -r dotenv/config setup/init_config.ts setup/food.json
 ```
 
-## To Build and Deploy the App to Azure
+## To Build and Deploy the App to Azure - * UNDER CONSTRUCTION *
 
 
 Build the container, and push to Azure Container Registry
 ```
-(source app/shop/.env && az acr build -r $AISHOP_ACR_NAME -t aishop/shop:dev01  app/shop; )
+(source app/shop/.env && az acr build -r $AISHOP_ACR_NAME -t aishop/shop:localdev01  app/shop; )
 ```
 
 
 ```
-# As a example to build locally (if you have docker installed)
-docker build -t shop app/shop
-docker run -it --entrypoint /bin/sh shop:latest
+# As a example to build locally, and run a shell in the container (if you have docker installed)
+docker build -t shop aishop/shop:localdev01
+docker run -it --entrypoint /bin/sh aishop/shop:localdev01
 ```
 
 **Any Issues, raise an Issue**
 
 
-### Option 2 : Install depednecies locally
+### Option 2 : Install depednecies locally - * UNDER CONSTRUCTION *
 
  of you want to run locally, follow 'Setup Dependencies Local,  for we will also need `mongodb` to store our data, and `azurite` blob storage emulator to store our images and documents.
 
