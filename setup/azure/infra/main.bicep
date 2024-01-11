@@ -5,10 +5,13 @@ param uniqueName string
 
 
 @description('Object ID of a developer user to be given role assignments, to allow the app to be ran locally with dependencies in Azure')
-param userObjectId string = ''
+param localDeveloperId string = ''
 
 @description('Location for the cluster.')
 param location string = resourceGroup().location
+
+@description('Deploy the application if true, otherwise just deploy dependencies to be used by the application')
+param deployApp bool = false
 
 // @description('Username for mongo admin user')
 // param mongoAdminUser string = 'admin'
@@ -87,6 +90,7 @@ module storage 'storage.bicep' = {
     ]
     objectId: managedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
+    localDeveloperId: localDeveloperId
   }
 }
 
@@ -104,17 +108,31 @@ module openai 'ai.bicep' = {
     modelVersion: location == 'westeurope' ? westEUModelVersion : westUSModelVersion
     objectId: managedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
+    localDeveloperId: localDeveloperId
   }
 }
 
-module containerapps 'containerapps.bicep' = {
+
+module buildImage 'br/public:deployment-scripts/build-acr:2.0.2' = if (deployApp) {
+  name: 'buildAcrImage-linux-dapr'
+  params: {
+    AcrName: acr.outputs.acrName
+    location: location
+    gitRepositoryUrl:  'https://github.com/khowling/ai-shop.git'
+    buildWorkingDirectory:  'app/shop'
+    imageName: 'aishop/ui'
+  }
+}
+
+
+module containerapps 'containerapps.bicep' = if (deployApp) {
   name: 'deploy-containerapps'
   params: {
     uniqueName: uniqueName
     location: location
     managedIdentityId: managedIdentity.id
     acrName: acr.outputs.acrName
-    acrImage: acr.outputs.acrImage
+    acrImage: buildImage.outputs.acrImage
     kvSecretUris: keyvault.outputs.secretUris
     envConfig: [
       {

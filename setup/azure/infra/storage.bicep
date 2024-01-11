@@ -28,6 +28,9 @@ param principalType string
 @description('Array of Blob container names to create')
 param blobContainers array
 
+@description('Id of the local developer to be added access to the storage account')
+param localDeveloperId string
+
 //-----------------Storage Account Construction-----------------
 resource StorageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   name: 'aishop${uniqueName}'
@@ -70,7 +73,7 @@ resource blobStorageDataContributorRoleDefinition 'Microsoft.Authorization/roleD
   name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 }
 
-resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource roleAssignmentApp 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(StorageAccount.id, objectId, blobStorageDataContributorRoleDefinition.id)
   scope: StorageAccount
   properties: {
@@ -80,6 +83,15 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   }
 }
 
+resource roleAssignmentDev 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(localDeveloperId)){
+  name: guid(StorageAccount.id, localDeveloperId, blobStorageDataContributorRoleDefinition.id)
+  scope: StorageAccount
+  properties: {
+    roleDefinitionId: blobStorageDataContributorRoleDefinition.id
+    principalId: localDeveloperId
+    principalType: 'User'
+  }
+}
 
 //form recognizer role assignment
 //var Cognitive_Services_User = '/providers/Microsoft.Authorization/roleDefinitions/a97b65f3-24c7-4388-baec-2e87135dc908'

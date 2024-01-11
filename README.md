@@ -44,7 +44,7 @@ rgName="aishop-${uniqueName}"
 az group create -n $rgName -l westeurope
 
 # Deploy ...
-az deployment group create -g $rgName  --template-file ./setup/azure/infra/main.bicep  --parameters uniqueName=${uniqueName}
+az deployment group create -g $rgName  --template-file ./setup/azure/infra/main.bicep  --parameters uniqueName=${uniqueName} deployApp=true
 ```
 
 You should see a `/ Running ..` prompt, that, if all goes well, in about 5minutes to complete successfully
@@ -61,7 +61,7 @@ You should see a `/ Running ..` prompt, that, if all goes well, in about 5minute
 To run this project, you will need a Linux environment with access to a command shell with `nodejs`. If using Mac, this should be no problem, if using a Windows laptop, use the default Ubuntu distribution on the amazing `WSL`:
 
  * Follow steps [here](https://learn.microsoft.com/en-us/windows/wsl/install) to install Ubuntu on WSL
- * Then [here](https://code.visualstudio.com/) for Visual Studio, then the VSCode extension for WSL [here](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)
+ * Then [here](https://code.visualstudio.com/) for Visual Studio Code, then the VSCode extension for WSL [here](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)
  * Then steps 1-3 [here](https://github.com/nodesource/distributions?tab=readme-ov-file#installation-instructions) will install ndoejs 
 
 ### Dependencies
@@ -84,19 +84,16 @@ Now, assuming you have cloned the repo locally, and have changed directory to th
 
 ```
 # Run the Infrastructure templates to provision the dependencies in Azure
-bash setup/azure/az.dependencies.sh >app/shop/.env
-
-# Run the script to populated the database and storage with the demo catalog
-cd app/shop
-npm i
-npx tsx -r dotenv/config setup/init_config.ts setup/food.json
+bash setup/azure/az.dependencies.sh westeurope >app/shop/.env
 
 # Build & run the app
+cd app/shop
+npm i
 npx tsc
 npm start
 ```
 
-To run & debug the app in VSCode, launch  `VSCode` from the repo folder and run the server as shown in the image below:
+Or, to run & debug the app in VSCode, launch  `VSCode` from the repo folder and run the server as shown in the image below:
 
 ```
 $ vscode .
@@ -104,6 +101,15 @@ $ vscode .
 
 ![VSCode Debug](./docs/vscodedebug.png)
 
+
+### To load in a new Catalog / System prompt
+
+Use this command to load in a new configuration, or update the existing config.  Including Catalog Items, AI System prompt, branding etc
+
+```
+# Run the script to populated the database and storage with the demo catalog
+npx tsx -r dotenv/config setup/init_config.ts setup/food.json
+```
 
 ## To Build and Deploy the App to Azure
 

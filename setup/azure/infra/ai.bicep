@@ -16,6 +16,8 @@ param objectId string
 ])
 param principalType string 
 
+@description('Id of the local developer to be added access to the storage account')
+param localDeveloperId string
 
 @description('Specifies the name of the model to deploy')
 param modelName string = 'gpt-35-turbo'
@@ -123,13 +125,24 @@ resource cognitiveServicesOpenAIUser 'Microsoft.Authorization/roleDefinitions@20
 
 
 // https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/role-based-access-control#azure-openai-roles
-resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource roleAssignmentApp 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(OpenAI.id, objectId, cognitiveServicesOpenAIUser.id)
   scope: OpenAI
   properties: {
     roleDefinitionId: cognitiveServicesOpenAIUser.id
     principalId: objectId
     principalType: principalType
+  }
+}
+
+// https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/role-based-access-control#azure-openai-roles
+resource roleAssignmentDev 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(localDeveloperId)) {
+  name: guid(OpenAI.id, localDeveloperId, cognitiveServicesOpenAIUser.id)
+  scope: OpenAI
+  properties: {
+    roleDefinitionId: cognitiveServicesOpenAIUser.id
+    principalId: localDeveloperId
+    principalType: 'User'
   }
 }
 

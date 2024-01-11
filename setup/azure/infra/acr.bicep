@@ -98,18 +98,7 @@ resource buildContainer 'Microsoft.ContainerRegistry/registries/buildTasks@2018-
 }
 */
 
-module buildImage 'br/public:deployment-scripts/build-acr:2.0.2' = {
-  name: 'buildAcrImage-linux-dapr'
-  params: {
-    AcrName: acrResource.name
-    location: location
-    gitRepositoryUrl:  'https://github.com/khowling/ai-shop.git'
-    buildWorkingDirectory:  'app/shop'
-    imageName: 'aishop/ui'
-  }
-}
-
 @description('Output the login server property for later use')
 output acrName string = acrResource.name
 output loginServer string = acrResource.properties.loginServer
-output acrImage string = buildImage.outputs.acrImage
+

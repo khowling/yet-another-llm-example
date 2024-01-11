@@ -275,9 +275,9 @@ export async function initCatalog(catalogfile: string): Promise<void> {
     }
 }
 
-// Get the command line argument
-
-if (process.argv[1].endsWith('init_config.js')) {
+// This file can be called directly from the command line, or imported into another file
+// If called directly, then the first argument is the catalog file to load
+if (process.argv[1].match(/init_config\.[jt]s$/)) {
     if (!process.argv[2]) {
         console.error('Usage: node init_config.js <catalogfile.json>');
         process.exit(1);
