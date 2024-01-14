@@ -2,63 +2,72 @@
 
 # Retail Store with AI
 
-This project showcases how to design, build and deploy webapps, combining the power of both regular programming logic, and GPU based LLMs, giving the user an enhanced natural, feed-based UX that is instantly familour, allowing users to interact with all the services of your business intuativly.
+This project is intended to be a north-star to design, build and deploy webapps combining the power of both regular programming logic and GPU based LLMs, giving the user an enhanced natural, feed-based UX that is instantly familiar, allowing users to interact with all the services of your business intuitively.
 
-The intended (but not limited) scope of this project will include:
- * `/app/shop` the storefront
- * `/app/factory` factory to create inventry
- * `/app/order` the order processor
+The principles this repo upholds are:
 
-The other principles this repo upholds are:
-
- :heavy_check_mark:  Targeting cloud agnostic dependencies, open-source, open-protocols  
- :heavy_check_mark:  Easily run the whole app on a dev laptop with local dependencies  
- :heavy_check_mark:  Independent and loosly coupled services, with boundaries based on team & data  
+ :heavy_check_mark:  Targeting cloud agnostic dependencies where practical, open-source, open-protocols  
+ :heavy_check_mark:  Easily run the whole app on a dev laptop with local dependencies where possible (ex. OpenAI)
+ :heavy_check_mark:  Independent and loosely coupled services, with boundaries based on team & data  
  :heavy_check_mark:  Performance, Security, Reliability and Cost are 1st class considerations  
  :heavy_check_mark:  Automated testing & deployments, for PR confidence & blue-green workflows  
 
 ![App](./docs/app.jpg)
 
-## To run the project in your Azure Subscription (easiest way to get a demo running)
 
-The project repo contains a full IaC (Infra-as-Code) to bootstrap the demo into your Azure subscription.  The IaC files provisiones all the resources you need to run the project, builds the container (using the amazing ACR build task), and deploys to Azure Container Apps.
+The intended scope of this project will include:
+ * `/app/shop` the storefront (available today)
+ * `/app/factory` factory to create inventory (future)
+ * `/app/order` the order processor (future)
 
-The esiest way to deploy is using the *Azure Cloud shell*, as this has all the dependencies you will need already installed, like `git` `az cli` etc.
+
+
+## To quicky run the app in your Azure Subscription
+
+The project's `setup` directory contains a simple script & IaC (Infra-as-Code) to bootstrap the demo into your Azure subscription.  The IaC files provisions all the resources you need to run the project, builds the initial container using [Azure Container Registry Tasks](https://learn.microsoft.com/azure/container-registry/container-registry-tasks-overview), and deploys to [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
+
+The easiest way to deploy is using the *Azure Cloud shell*, as this has all the dependencies you will need already installed, like `git` `az cli` etc.
 
 * **Step 1** : goto [Azure Cloud Shell](https://shell.azure.com), and once you have a `$` prompt,
 
-* **Step 2** : Copy and Paste this to clone the repo to your cloud shell
-```sh
-git clone https://github.com/khowling/ai-shop.git
-```
-* **Step 3** : Run the following Azure CLI commands to deploy the services and app. NOTE: feel free to change the `westeurope` to the region of your choice
-```sh
-# Change to project directory
-cd ai-shop
+* **Step 2** : Clone the repo in your cloud shell
+   ```sh
+   git clone https://github.com/khowling/ai-shop.git
+   ```
+* **Step 3** : Run the following to deploy. 
 
-# Generate a unique name for the deployment, some Azure resources need globally unique names :(
-uniqueName=$(printf '%05x' $RANDOM)
-rgName="aishop-${uniqueName}"
+    >NOTE: Change `westeurope` to the region of your choice
+   ```sh
+   # Change to project directory
+   cd ai-shop
 
-# Create resource group...
-az group create -n $rgName -l westeurope
+   # Set region and a unique name for the deployment
+   location="westeurope"
+   uniqueName=$(printf '%05x' $RANDOM)
+   rgName="aishop-${uniqueName}"
 
-# Deploy ...
-az deployment group create -g $rgName  --template-file ./setup/azure/infra/main.bicep  --parameters uniqueName=${uniqueName} deployApp=true
-```
+   # Create resource group
+   az group create -n $rgName -l $location
 
-You should see a `/ Running ..` prompt, that, if all goes well, in about 5minutes to complete successfully
+   # Deploy
+   az deployment group create -g $rgName --template-file ./setup/azure/infra/main.bicep --parameters uniqueName=${uniqueName} deployApp=true
+   ```
 
-* **Step** 4 : Go Look at your app, and open it in a browser.  
-   * Open `portal.azure.com`, and you should see a new resource group called `aishop-xxxxx` containing this:
-   ![Resources](./docs/azresources.png)
+   You should see a `/ Running ..` prompt, that, if all goes well will last for about 5minutes to complete successfully, and return a large json output.
+
+* **Step** 4 : Open the app in your browser!  
+   * Open `portal.azure.com`, and you should see a new resource group called **`aishop-xxxxx`** containing:
+
+      ![Resources](./docs/azresources.png)
+
    * Navigate to the `aishop` `Container App` resource
    * Click on the `Application Url` in the top right conner of the overview tab.  You should see your app.
 
+      > NOTE: Any issues, please log a issue against this github repo, and we'll get to it asap.
 
 ## To run the project locally on your laptop (If you want to change/contribute)
 
-To run this project, you will need a Linux environment with access to a command shell with `nodejs`. If using Mac, this should be no problem, if using a Windows laptop, use the default Ubuntu distribution on the amazing `WSL`:
+To run this project as a developer, you will need a Linux environment with access to a command shell with `nodejs`. If using Mac, this should be no problem, if using a Windows laptop, use the default Ubuntu distribution on the amazing `WSL`:
 
  * Follow steps [here](https://learn.microsoft.com/en-us/windows/wsl/install) to install Ubuntu on WSL
  * Then [here](https://code.visualstudio.com/) for Visual Studio Code, then the VSCode extension for WSL [here](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)
@@ -66,26 +75,29 @@ To run this project, you will need a Linux environment with access to a command 
 
 ### Dependencies
 
-Now, the application needs a `mongo database` for our business objects and trasactions, a `blob storage` for documents and images and a `few OpenAI services` for the chat experiance.  You can either run these in the cloud (recommended), or run them locally using local emulators (except for the AI dependencies of course). Follow `Option1 : Run app locally with Dependencies in Cloud`, or, if you want to run locally, follow `Option 2 : Install depednecies locally`
+Now, the application needs a `mongo database` for our business objects and transactions, a `blob storage` for documents and images and a `few OpenAI services` for the chat experiance.  You can either run these in the cloud (recommended), or run them locally using local emulators (except for the AI dependencies of course). Follow `Option1 : Run app locally with Dependencies in Cloud`, or, if you want to run locally, follow `Option 2 : Install dependencies locally`
 
-> NOTE: If you have an Azure account already or your not familour with installing packages in Linux (it gets involved), is probably easier to run the dependencies in your Azure subscription
+> NOTE: If you have an Azure account already or your not familiar with installing packages in Linux (it gets involved), is probably easier to run the dependencies in your Azure subscription
 
 ### Option1 : Run app locally with Dependencies in Cloud (Azure)
 
-This repo contains the nesassary scripts to setup all the Azure dependencies you need to run this app. It also creates a local `.env` file will all the nesaccary connection details for the app to run locally, with the dependencies running in Azure.
+This repo contains the necessary scripts to setup all the Azure dependencies you need to run this app. It also creates a local `.env` file will all the necessary connection details for the app to run locally, with the dependencies running in Azure.
 
 Ensure you have the Azure [`az cli`](https://learn.microsoft.com/cli/azure/install-azure-cli), installed, and its logged in (`az login`) with an account that has `owner` rights on the subscription.
 
 Now, assuming you have cloned the repo locally, and have changed directory to the repo folder, just execute the following commands set everything up and launch the app: 
 
- > NOTE: If you have already followed the 4 steps to deploy the app to Azure at the top of this README, and would like to re-use the same dependencies when you are running locally (recommended),  ensure you specify the same region and set the same `uniqueName` as the  5 digit unique string that was generated during the initial deployment
+ > NOTE: If you have already followed the 4 steps to deploy the app to Azure at the top of this README, and would like to re-use the same dependencies when you are running locally (recommended),  ensure you specify the same region and set the same `uniqueName` as the  5 digit unique string that was generated during the initial deployment, otherwise dont set it & it will be automatically generated for you.
  > ```sh
- > uniqueName=xxxxx
+ > uniqueName="xxxxx"
  > ``` 
 
 ```
+# Set your region
+location="westeurope"
+
 # Run the Infrastructure templates to provision the dependencies in Azure
-bash setup/azure/az.dependencies.sh westeurope $uniqueName >app/shop/.env
+bash setup/azure/az.dependencies.sh $location $uniqueName >app/shop/.env
 
 # Build & run the app
 cd app/shop
@@ -108,23 +120,25 @@ Use this command to load in a new configuration, or update the existing config. 
  > you can either use the `setup/food.json` or `setup/bikes.json` arguments to the `init_config` below for different starting catalogs.
 
 ```
-# Run the script to populated the database and storage with the demo catalog
+# Run the script to populate the database and storage with the demo catalog
 npx tsx -r dotenv/config setup/init_config.ts setup/food.json
 ```
 
-## To Build and Deploy the App to Azure - * UNDER CONSTRUCTION *
+### To Build and Deploy a new revision of the app ** *** UNDER CONSTRUCTION *** **
 
 
-Build the container, and push to Azure Container Registry
+Build the application container from your locally cloned source code, and push to your Azure Container Registry, all in one step using [Azure Container Registry Tasks](https://learn.microsoft.com/azure/container-registry/container-registry-tasks-overview)
 ```
-(source app/shop/.env && az acr build -r $AISHOP_ACR_NAME -t aishop/shop:localdev01  app/shop; )
+# Ensure you are in the root directory of this project, and run
+(source app/shop/.env && 
+   az acr build -r $AISHOP_ACR_NAME -t aishop/shop:localdev01  app/shop &&
+   az containerapp revision copy -n $AISHOP_ACA_NAME -g AISHOP_RG_NAME --image 
+)
 ```
 
-
+Now, Create a new [revision](https://learn.microsoft.com/azure/container-apps/revisions) of your app in Azure Container Apps
 ```
-# As a example to build locally, and run a shell in the container (if you have docker installed)
-docker build -t shop aishop/shop:localdev01
-docker run -it --entrypoint /bin/sh aishop/shop:localdev01
+
 ```
 
 **Any Issues, raise an Issue**
@@ -184,6 +198,12 @@ a fully managed MongoDB-compatible database service for building modern applicat
 
 However, we want a few of the features only in `vCore`, the Vector & Text indexes Search, also there is a free teir with 32GB of storage, and a new 'B' so we can get started for cheap.  This provisions a MongoDB cluster, with version 5 or 6!. It looks like you need to provision it with a server admin and password, does it support Managed Identity??!
 
+## If you have docker locally (not a requirement for this project, as it should be:) )
+```
+# As a example to build locally, and run a shell in the container (if you have docker installed)
+docker build -t shop aishop/shop:localdev01
+docker run -it --entrypoint /bin/sh aishop/shop:localdev01
+```
 
 
 ##  Roadblock - 
