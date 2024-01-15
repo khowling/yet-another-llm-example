@@ -52,8 +52,8 @@ module acr './acr.bicep' = {
   params: {
     uniqueName: uniqueName
     location: location
-    objectId: managedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
+    managedIdentityId: managedIdentity.properties.principalId
+    localDeveloperId: localDeveloperId
   }
 }
 
@@ -88,8 +88,7 @@ module storage 'storage.bicep' = {
         name: blobImageContainerName
       }
     ]
-    objectId: managedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
+    managedIdentityId: managedIdentity.properties.principalId
     localDeveloperId: localDeveloperId
   }
 }
@@ -106,24 +105,64 @@ module openai 'ai.bicep' = {
     location: location
     modelName: modelName
     modelVersion: location == 'westeurope' ? westEUModelVersion : westUSModelVersion
-    objectId: managedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
+    managedIdentityId: managedIdentity.properties.principalId
     localDeveloperId: localDeveloperId
   }
 }
 
 
-module buildImage 'br/public:deployment-scripts/build-acr:2.0.2' = if (deployApp) {
-  name: 'buildAcrImage-linux-dapr'
-  params: {
-    AcrName: acr.outputs.acrName
-    location: location
-    gitRepositoryUrl:  'https://github.com/khowling/ai-shop.git'
-    buildWorkingDirectory:  'app/shop'
-    imageName: 'aishop/ui'
+// module buildImage 'br/public:deployment-scripts/build-acr:2.0.2' = if (deployApp) {
+//   name: 'buildAcrImage-linux-dapr'
+//   params: {
+//     AcrName: acr.outputs.acrName
+//     location: location
+//     gitRepositoryUrl:  'https://github.com/khowling/ai-shop.git'
+//     buildWorkingDirectory:  'app/shop'
+//     imageName: 'aishop/ui'
+//   }
+// }
+
+param imageName string = 'aishop/shop'
+param imageTag string = string(dateTimeToEpoch(utcNow()))
+resource buildImage 'Microsoft.Resources/deploymentScripts@2020-10-01' = if (deployApp)  {
+  name: 'build-image'
+  location: location
+  kind: 'AzureCLI'
+  // will use the identity of the local developer to build the image
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentity.id}': {}
+    }
+  }
+  properties: {
+    azCliVersion: '2.54.0'
+    retentionInterval: 'P1D'
+    scriptContent: '''
+      #!/bin/bash
+      az acr build -r $AISHOP_ACR_NAME -t $IMAGE_NAME:$IMAGE_TAG  app/shop
+    '''
+
+    environmentVariables: [
+      {
+        name: 'AISHOP_ACR_NAME'
+        value: acr.outputs.acrName
+      }
+      {
+        name: 'IMAGE_TAG'
+        value: imageTag
+      }
+      {
+        name: 'IMAGE_NAME'
+        value: imageName
+      }
+    ]
+
+    supportingScriptUris: [
+      'app/shop'
+    ] 
   }
 }
-
 
 module containerapps 'containerapps.bicep' = if (deployApp) {
   name: 'deploy-containerapps'
@@ -132,7 +171,7 @@ module containerapps 'containerapps.bicep' = if (deployApp) {
     location: location
     managedIdentityId: managedIdentity.id
     acrName: acr.outputs.acrName
-    acrImage: buildImage.outputs.acrImage
+    acrImage: '${imageName}:${imageTag}' //buildImage.outputs.acrImage
     kvSecretUris: keyvault.outputs.secretUris
     envConfig: [
       {
@@ -159,6 +198,9 @@ module containerapps 'containerapps.bicep' = if (deployApp) {
       }
     ]
   }
+  dependsOn: [
+    buildImage
+  ]
 }
 
 output cosmosConnectionURL string = cosmosMongo42.outputs.cosmosConnectionURL
@@ -166,3 +208,4 @@ output storageAccountName string = storage.outputs.storageAccountName
 output openAIEndpoint string = openai.outputs.openAIEndpoint
 output openAIModel string = openai.outputs.openAIModel
 output acrName string = acr.outputs.acrName
+output acaName string = deployApp ? containerapps.outputs.acaName : ''

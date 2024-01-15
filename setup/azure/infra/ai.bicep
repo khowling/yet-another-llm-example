@@ -7,14 +7,7 @@ param uniqueName string
 param location string = resourceGroup().location
 
 @description('Specifies the object ID of a user, service principal or security group in the Azure Active Directory tenant for the vault. The object ID must be unique for the list of access policies. Get it by using Get-AzADUser or Get-AzADServicePrincipal cmdlets.')
-param objectId string
-
-@description('principle type')
-@allowed([
-  'User'
-  'ServicePrincipal'
-])
-param principalType string 
+param managedIdentityId string
 
 @description('Id of the local developer to be added access to the storage account')
 param localDeveloperId string
@@ -126,12 +119,12 @@ resource cognitiveServicesOpenAIUser 'Microsoft.Authorization/roleDefinitions@20
 
 // https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/role-based-access-control#azure-openai-roles
 resource roleAssignmentApp 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(OpenAI.id, objectId, cognitiveServicesOpenAIUser.id)
+  name: guid(OpenAI.id, managedIdentityId, cognitiveServicesOpenAIUser.id)
   scope: OpenAI
   properties: {
     roleDefinitionId: cognitiveServicesOpenAIUser.id
-    principalId: objectId
-    principalType: principalType
+    principalId: managedIdentityId
+    principalType: 'ServicePrincipal'
   }
 }
 
