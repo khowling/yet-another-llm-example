@@ -4,12 +4,15 @@ import { html } from '@elysiajs/html'
 import { Stream } from '@elysiajs/stream'
 import { staticPlugin } from '@elysiajs/static'
 import { MongoClient, ObjectId } from 'mongodb'
+import { OpenAIClient, type ChatRequestMessage } from '@azure/openai'
+import { DefaultAzureCredential,  } from '@azure/identity';
 import { ProductOrCategory, TenantDefinition, containerClient } from './init_config'
 import Index from './components/index'
 import Products from './components/products'
 import Help from "./components/help";
 import TextResponse from "./components/textResponse";
 import Cart from "./components/cart";
+import Llm from "./components/llm";
 
 
 // Going to use Buns embedded DB for session info, just for testing, for production, use mongo/cosmos!
@@ -25,10 +28,13 @@ const newSession = memorydb.query<{sessionid: number}, number>(`INSERT INTO sess
 const newCartItem = memorydb.query<null, {$sessionid: number, $productid: string, $heading: string, $qty: number}>('INSERT INTO cart VALUES  ($sessionid, $productid, $heading, $qty)');
 const listCart = memorydb.query<{productid: string, heading: string,  qty: number}, {$sessionid: number}>('SELECT productid, heading, qty FROM cart WHERE sessionid = $sessionid;');
 const newPromptHistory = memorydb.query<null, {$sessionid: number, $date: number, $role: string, $content: string}>('INSERT INTO prompt_history VALUES  ($sessionid, $date, $role, $content)');
-
+const listPromptHistory = memorydb.query<{role: string, content: string}, {$sessionid: number}>('SELECT role, content FROM prompt_history WHERE sessionid = $sessionid;');
 
 const murl : string = process.env.AISHOP_MONGO_CONNECTION_STR || "mongodb://localhost:27017/azshop?replicaSet=rs0"
 const client = new MongoClient(murl);
+
+const aiclient = new OpenAIClient(process.env.AISHOP_OPENAI_ENDPOINT as string, new DefaultAzureCredential());
+
 
 const imageBaseUrl = '/file' // process.env.AISHOP_STORAGE_ACCOUNT ? `https://${process.env.AISHOP_STORAGE_ACCOUNT}.blob.core.windows.net/${process.env.AISHOP_IMAGE_CONTAINER}` : `https://127.0.0.1:10000/devstoreaccount1/${process.env.AISHOP_IMAGE_CONTAINER}`
 
@@ -45,8 +51,7 @@ const explore = async (session : Cookie<any>, partition_key: string, type: 'Cate
     console.log (`/explore got partition_key ${partition_key}`)
     const category_or_products = await db.collection('products').find({partition_key, type, ...(category && {category_id: new ObjectId(category)})}).toArray() as unknown as Array<ProductOrCategory>
    
-    if (category)
-    newPromptHistory.run({
+    if (category) newPromptHistory.run({
         $sessionid: session.value, 
         $date: Date.now(), 
         $role: "user", 
@@ -140,6 +145,85 @@ const app = new Elysia()
             return error
         }
     })
+    .post('/api/chat/request',({body, cookie: { session }}) => {
+    
+        newPromptHistory.run({
+            $sessionid: session.value, 
+            $date: Date.now(), 
+            $role: "user", 
+            $content: body.question
+        })
+
+        return <Llm chatid={session.value + '-' + Date.now()} question={body.question}/>
+      }, {
+        body: t.Object({
+            question: t.String()
+        })
+    })
+    .get('/api/chat/completion/:chatid', async ({params: { chatid }, cookie: { session}}) => new Stream(async (stream) => {
+
+        stream.send(`event: ${chatid}\n`);
+
+        try {
+
+            if (!process.env.AISHOP_OPENAI_MODELNAME) throw new Error('AISHOP_OPENAI_MODELNAME not set')
+            const phist = listPromptHistory.all({$sessionid: session.value}) as Array<ChatRequestMessage>
+            const events = await aiclient.streamChatCompletions(process.env.AISHOP_OPENAI_MODELNAME as string, phist, { maxTokens: 256 });
+
+            let response = '';
+            let isopencode = false;
+
+            for await (const event of events) {
+                for (const choice of event.choices) {
+                    const delta = choice.delta?.content;
+
+                    if (delta !== undefined) {
+
+                        response += delta;
+                    
+                        const codematch = response.match(/```(\w*)\n/)
+                        if (codematch && codematch.index) {
+
+                            response = response.replace(/```(\w*)\n/, isopencode ?  `
+                            </span>
+                            <svg class="shrink-0 h-5 w-5 transition text-gray-500 group-hover:text-white" xmlns="http://www.w3.org/2000/svg"viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z"></path>
+                                <path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z"></path>
+                            </svg>
+                        </code>` :  `
+                            <code class="text-sm sm:text-base inline-flex text-left items-center space-x-4 bg-gray-800 text-white rounded-lg p-4 pl-6">
+                                <span class="flex gap-4">`)
+                            isopencode = !isopencode
+                        }
+                        response = response.replaceAll('\n', '<br/>')
+
+                        stream.send(`event: ${chatid}\n`);
+                        stream.send(`data:  ${response}\n\n`);
+                    }
+                }
+            }
+
+            newPromptHistory.run({
+                $sessionid: session.value, 
+                $date: Date.now(), 
+                $role: "system", 
+                $content: response
+            })
+
+            stream.send(`event: close${chatid}\n`);
+            stream.send(`data: <div class="chat-bubble chat-bubble-info">${response}</div>\n\n`);
+            stream.close()
+
+            //console.log (`completed: ${chatsidx}`)
+
+        } catch (e: any) {
+            console.error(e);
+            stream.send(`event: close${chatid}\n`);
+            stream.send(`data: <div class="chat-bubble chat-bubble-warning">I'm not availabile right now, please continue to use the / commands to explore and order our products (${JSON.stringify(e)})</div>\n\n`);
+            stream.close()
+        }
+    }))
+    
     .listen(3000)
 
 console.log(
