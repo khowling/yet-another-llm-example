@@ -121,7 +121,7 @@ Use this command to load in a new configuration, or update the existing config. 
 
 ```
 # Run the script to populate the database and storage with the demo catalog
-npx tsx -r dotenv/config setup/init_config.ts setup/food.json
+bun src/init_config.ts setup/food.json
 ```
 
 ### To Build and Deploy a new revision of the app ** *** UNDER CONSTRUCTION *** **
@@ -174,14 +174,10 @@ mongosh --eval 'rs.initiate({ _id: "rs0", members: [ { _id: 0, host : "localhost
 
 instructions here https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite?tabs=visual-studio-code%2Cblob-storage
 
-**WIP**  This gets complex, with needing https and generate certs :( :(  not a great DX
-
 
 
 #### Initialise the database and images
 
-
-NODE_TLS_REJECT_UNAUTHORIZED=0  node setup/init_config.js
 
 
 
