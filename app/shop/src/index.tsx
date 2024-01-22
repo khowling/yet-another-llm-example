@@ -6,7 +6,7 @@ import { staticPlugin } from '@elysiajs/static'
 import { MongoClient, ObjectId } from 'mongodb'
 import { OpenAIClient, type ChatRequestMessage } from '@azure/openai'
 import { DefaultAzureCredential,  } from '@azure/identity';
-import { ProductOrCategory, TenantDefinition, containerClient } from './init_config'
+import { ProductOrCategory, TenantDefinition, containerClient, initCatalog } from './init_config'
 import Index from './components/index'
 import Products from './components/products'
 import Help from "./components/help";
@@ -82,7 +82,12 @@ const app = new Elysia()
             }
 
             const db = await getDb();
-            const tenant = await db.collection('tenant').findOne({}) as unknown as TenantDefinition
+            var tenant = await db.collection('tenant').findOne({}) as unknown as TenantDefinition
+            if (!tenant) {
+                console.log ('lets create a tenant')
+                tenant = await initCatalog('setup/food.json') as TenantDefinition
+                if (!tenant) throw new Error('failed to create tenant')
+            }
             store.partition_key = tenant.partition_key
             console.log (`/ storing partition_key ${store.partition_key}`)
 

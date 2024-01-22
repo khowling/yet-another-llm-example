@@ -26,7 +26,7 @@ The intended scope of this project will include:
 
 The project's `setup` directory contains a simple script & IaC (Infra-as-Code) to bootstrap the demo into your Azure subscription.  The IaC files provisions all the resources you need to run the project, builds the initial container using [Azure Container Registry Tasks](https://learn.microsoft.com/azure/container-registry/container-registry-tasks-overview), and deploys to [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
 
-The easiest way to deploy is using the *Azure Cloud shell*, as this has all the dependencies you will need already installed, like `git` `az cli` etc.
+The easiest way to deploy is using the *Azure Cloud shell*, as this has the Azure CLI already installed & logged in.
 
 * **Step 1** : goto [Azure Cloud Shell](https://shell.azure.com), and once you have a `$` prompt,
 
@@ -46,7 +46,7 @@ The easiest way to deploy is using the *Azure Cloud shell*, as this has all the 
    az group create -n $rgName -l $location
 
    # Deploy
-   az deployment group create -g $rgName --template-uri https://github.com/khowling/ai-shop/releases/download/0.0.2/main.json --parameters uniqueName=${uniqueName} repoUrl=https://github.com/khowling/ai-shop.git branch=kh/revision
+   az deployment group create -g $rgName --template-uri https://github.com/khowling/ai-shop/releases/download/0.0.3/main.json --parameters uniqueName=${uniqueName} repoUrl=https://github.com/khowling/ai-shop.git
    ```
 
    You should see a `/ Running ..` prompt, that, if all goes well will last for about 5minutes to complete successfully, and return a large json output.

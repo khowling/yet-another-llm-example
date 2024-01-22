@@ -91,6 +91,8 @@ resource existingManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentiti
 
 param modelName string
 
+var arcServer = '${acrName}.azurecr.io'
+
 resource containerapp 'Microsoft.App/containerApps@2023-05-01' = {
   name: 'aishop'
   location: location
@@ -105,7 +107,7 @@ resource containerapp 'Microsoft.App/containerApps@2023-05-01' = {
     configuration: {
       registries: [
         {
-            server: '${acrName}.azurecr.io'
+            server: arcServer
             identity: existingManagedIdentity.id
         }
       ]
@@ -126,7 +128,7 @@ resource containerapp 'Microsoft.App/containerApps@2023-05-01' = {
     template: {
       containers: [
         {
-          image: '${imageName}:${imageTag}'
+          image: '${arcServer}/${imageName}:${imageTag}'
           name: 'ui'
           resources: {
             cpu: 1
@@ -168,6 +170,9 @@ resource containerapp 'Microsoft.App/containerApps@2023-05-01' = {
     }
     workloadProfileName: 'Consumption'
   }
+  dependsOn: [
+    buildImage
+  ]
 }
 
 

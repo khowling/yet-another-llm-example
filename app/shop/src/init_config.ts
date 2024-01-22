@@ -237,7 +237,7 @@ async function loadBlobImages(partition_key: string, catalogData: ConfigData, ca
     
 
 
-export async function initCatalog(catalogfile: string): Promise<void> {
+export async function initCatalog(catalogfile: string): Promise<TenantDefinition | void> {
     
     try {
         await client.connect();
@@ -266,6 +266,7 @@ export async function initCatalog(catalogfile: string): Promise<void> {
 
 
         await populateTenant(db, catalogData.tenant.partition_key, catalogData, imagemap);
+        return tenant
 
     } catch (error) {
         console.error('Error connecting to the database or accessing the catalog file:', error);
