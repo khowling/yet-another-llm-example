@@ -50,7 +50,7 @@ The easiest way to deploy is using the *Azure Cloud shell*, as this has all the 
    az group create -n $rgName -l $location
 
    # Deploy
-   az deployment group create -g $rgName --template-file ./setup/azure/infra/main.bicep --parameters uniqueName=${uniqueName} deployApp=true
+   az deployment group create -g $rgName --template-file ./setup/azure/infra/main.bicep --parameters uniqueName=${uniqueName}
    ```
 
    You should see a `/ Running ..` prompt, that, if all goes well will last for about 5minutes to complete successfully, and return a large json output.

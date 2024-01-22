@@ -2,8 +2,10 @@
   "name": "shop",
   "version": "1.0.50",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "bun run --watch src/index.tsx"
+    "dev": "bun --watch src/index.tsx",
+    "build": "bun --target=bun build src/index.tsx  --outdir dist",
+    "start": "NODE_ENV=production bun src/index.tsx",
+    "test": "bun test"
   },
   "dependencies": {
     "@azure/identity": "^4.0.0",

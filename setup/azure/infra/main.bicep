@@ -19,10 +19,13 @@ param location string = resourceGroup().location
 // @maxLength(128)
 // param mongoAdminPassword string
 
+@description('Deploy App')
+param deployApp bool = true
 
 // If we havnt passed in an identity to create permissions against, create one
+var managedIdentityName = 'aishop-${uniqueName}'
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
-  name: 'aishop-${uniqueName}'
+  name: managedIdentityName
   location: location
 }
 
@@ -104,6 +107,29 @@ module openai 'ai.bicep' = {
     modelVersion: location == 'westeurope' ? westEUModelVersion : westUSModelVersion
     managedIdentityId: managedIdentity.properties.principalId
     localDeveloperId: localDeveloperId
+  }
+}
+
+module containerapps 'acaenv.bicep' =  {
+  name: 'deploy-containerapps'
+  params: {
+    uniqueName: uniqueName
+    location: location
+  }
+}
+
+module deployapp 'deployapp.bicep' = if(deployApp) {
+  name: 'deploy-deployapp'
+  params: {
+    location: location
+    //managedIdentityId: managedIdentity.properties.principalId
+    managedIdentityName: managedIdentityName
+    acrName: acr.outputs.acrName
+    kvSecretUris: keyvault.outputs.secretUris
+    AcaEnvironmentId: containerapps.outputs.acaEnvId
+    storageAccountName: storage.outputs.storageAccountName
+    openAIEndpoint: openai.outputs.openAIEndpoint
+    modelName: openai.outputs.openAIModel
   }
 }
 
