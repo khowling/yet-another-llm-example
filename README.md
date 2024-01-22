@@ -46,12 +46,12 @@ The easiest way to deploy is using the *Azure Cloud shell*, as this has all the 
    az group create -n $rgName -l $location
 
    # Deploy
-   az deployment group create -g $rgName --template-uri https://github.com/khowling/ai-shop/releases/download/0.0.2/main.json --parameters uniqueName=${uniqueName} repoUrl='https://github.com/khowling/ai-shop.git'
+   az deployment group create -g $rgName --template-uri https://github.com/khowling/ai-shop/releases/download/0.0.2/main.json --parameters uniqueName=${uniqueName} repoUrl=https://github.com/khowling/ai-shop.git branch=kh/revision
    ```
 
    You should see a `/ Running ..` prompt, that, if all goes well will last for about 5minutes to complete successfully, and return a large json output.
 
-* **Step** 4 : Open the app in your browser!  
+* **Step** 3 : Open the app in your browser!  
    * Open `portal.azure.com`, and you should see a new resource group called **`aishop-xxxxx`** containing:
 
       ![Resources](./docs/azresources.png)
@@ -83,7 +83,7 @@ Ensure you have the Azure [`az cli`](https://learn.microsoft.com/cli/azure/insta
 
 Now, assuming you have cloned the repo locally, and have changed directory to the repo folder, just execute the following commands set everything up and launch the app: 
 
- > NOTE: If you have already followed the 4 steps to deploy the app to Azure at the top of this README, and would like to re-use the same dependencies when you are running locally (recommended),  ensure you specify the same region and set the same `uniqueName` as the  5 digit unique string that was generated during the initial deployment, otherwise dont set it & it will be automatically generated for you.
+ > NOTE: If you have already followed the 3 steps to deploy the app to Azure at the top of this README, and would like to re-use the same dependencies when you are running locally (recommended),  ensure you specify the same region and set the same `uniqueName` as the  5 digit unique string that was generated during the initial deployment, otherwise dont set it & it will be automatically generated for you.
  > ```sh
  > uniqueName="xxxxx"
  > ``` 

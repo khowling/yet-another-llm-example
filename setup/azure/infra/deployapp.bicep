@@ -23,6 +23,9 @@ param openAIEndpoint string
 @description('Git Repository Url')
 param gitRepositoryUrl string
 
+@description('Git Repository Branch')
+param gitBranch string
+
 param blobImageContainerName string = 'images'
 
 param imageName string = 'aishop/shop'
@@ -37,6 +40,7 @@ module buildImage 'br/public:deployment-scripts/build-acr:2.0.2' =  {
     buildWorkingDirectory:  'app/shop'
     imageName: imageName
     imageTag: imageTag
+    gitBranch: gitBranch
   }
 }
 

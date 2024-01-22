@@ -22,6 +22,10 @@ param location string = resourceGroup().location
 @description('Git Repository Url')
 param repoUrl string 
 
+@description('Git Repository Branch')
+param branch string = 'main'
+
+
 // If we havnt passed in an identity to create permissions against, create one
 var managedIdentityName = 'aishop-${uniqueName}'
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
@@ -124,6 +128,7 @@ module deployapp 'deployapp.bicep' = if(!empty(repoUrl)) {
     location: location
     //managedIdentityId: managedIdentity.properties.principalId
     gitRepositoryUrl: repoUrl
+    gitBranch: branch
     managedIdentityName: managedIdentityName
     acrName: acr.outputs.acrName
     kvSecretUris: keyvault.outputs.secretUris
