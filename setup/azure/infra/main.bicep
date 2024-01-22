@@ -19,8 +19,8 @@ param location string = resourceGroup().location
 // @maxLength(128)
 // param mongoAdminPassword string
 
-@description('Deploy App')
-param deployApp bool = true
+@description('Git Repository Url')
+param repoUrl string 
 
 // If we havnt passed in an identity to create permissions against, create one
 var managedIdentityName = 'aishop-${uniqueName}'
@@ -118,11 +118,12 @@ module containerapps 'acaenv.bicep' =  {
   }
 }
 
-module deployapp 'deployapp.bicep' = if(deployApp) {
+module deployapp 'deployapp.bicep' = if(!empty(repoUrl)) {
   name: 'deploy-deployapp'
   params: {
     location: location
     //managedIdentityId: managedIdentity.properties.principalId
+    gitRepositoryUrl: repoUrl
     managedIdentityName: managedIdentityName
     acrName: acr.outputs.acrName
     kvSecretUris: keyvault.outputs.secretUris

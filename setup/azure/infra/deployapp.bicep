@@ -21,7 +21,7 @@ param storageAccountName string
 param openAIEndpoint string
 
 @description('Git Repository Url')
-param gitRepositoryUrl string = 'https://github.com/khowling/ai-shop.git'
+param gitRepositoryUrl string
 
 param blobImageContainerName string = 'images'
 

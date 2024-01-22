@@ -30,11 +30,7 @@ The easiest way to deploy is using the *Azure Cloud shell*, as this has all the 
 
 * **Step 1** : goto [Azure Cloud Shell](https://shell.azure.com), and once you have a `$` prompt,
 
-* **Step 2** : Clone the repo in your cloud shell
-   ```sh
-   git clone https://github.com/khowling/ai-shop.git
-   ```
-* **Step 3** : Run the following to deploy. 
+* **Step 2** : Run the following to deploy. 
 
     >NOTE: Change `westeurope` to the region of your choice
    ```sh
@@ -50,7 +46,7 @@ The easiest way to deploy is using the *Azure Cloud shell*, as this has all the 
    az group create -n $rgName -l $location
 
    # Deploy
-   az deployment group create -g $rgName --template-file ./setup/azure/infra/main.bicep --parameters uniqueName=${uniqueName}
+   az deployment group create -g $rgName --template-uri https://github.com/khowling/ai-shop/releases/download/0.0.2/main.json --parameters uniqueName=${uniqueName} repoUrl='https://github.com/khowling/ai-shop.git'
    ```
 
    You should see a `/ Running ..` prompt, that, if all goes well will last for about 5minutes to complete successfully, and return a large json output.
