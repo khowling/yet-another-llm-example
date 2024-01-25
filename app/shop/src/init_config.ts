@@ -98,87 +98,73 @@ export type ConfigData = {
     }
 }
 
-async function populateTenant(db: mongoDB.Db, partition_key: string, catalogData: ConfigData, imagemap: Map<string, { pathname: string; }> ): Promise<void> { 
+async function populateTenant(log: (message: string) => void, db: mongoDB.Db, partition_key: string, catalogData: ConfigData, imagemap: Map<string, { pathname: string; }> ): Promise<void> { 
 
     const { Product, Category } = catalogData.products
 
     const catmap = new Map()
     const newcats = Category.map((c) => {
-        console.log(`populateTenent: Processing catalog ${c.heading}`)
+        log(`populateTenent: Processing catalog ${c.heading}`)
         const old_id = c._id, new_id = new ObjectId()//.toHexString()
         const newc: ProductOrCategory = { ...c, _id: new_id, partition_key: partition_key, creation: Date.now() }
         if (c.image && c.image.pathname) {
             if (imagemap.has(c.image.pathname)) {
                 newc.image = imagemap.get(c.image.pathname) as { pathname: string}
             } else  {
-                console.error(`Cannot find image for Category ${c.heading}:  ${c.image.pathname}`)
+                log(`ERROR: Cannot find image for Category ${c.heading}:  ${c.image.pathname}`)
             }
         }
         catmap.set(old_id, new_id)
         return newc
     })
 
-    console.log (`Clearing down all products and categories..`)
+    log (`Clearing down all products and categories..`)
     await db.collection('products').deleteMany({partition_key: partition_key })
 
-    console.log(`Loading Categories : ${JSON.stringify(newcats)}`)
+    log(`Loading Categories : ${JSON.stringify(newcats)}`)
     await db.collection('products').insertMany(newcats)
 
     const newproducts = Product.map((p) => {
-        console.log(`Processing product ${p.heading}`)
+        log(`Processing product ${p.heading}`)
         const old_id = p._id, new_id = new ObjectId()//.toHexString()
         const newp = { ...p, _id: new_id, partition_key: partition_key, creation: Date.now() }
         if (p.category_id) {
             newp.category_id = catmap.get(p.category_id)
             if (!newp.category_id) {
-                console.error(`Cannot find category for product  ${p.heading}:  ${p.category_id}`)
+                log(`ERROR: Cannot find category for product  ${p.heading}:  ${p.category_id}`)
             }
         }
         if (p.image && p.image.pathname) {
             if (imagemap.has(p.image.pathname)) {
                 newp.image = imagemap.get(p.image.pathname) as { pathname: string}
             } else  {
-                console.error(`Cannot find image for Product ${p.heading}:  ${p.image.pathname}`)
+                log(`ERROR: Cannot find image for Product ${p.heading}:  ${p.image.pathname}`)
             }
 
         }
         return newp
     })
 
-    console.log("Importing Products")
+    log("Importing Products")
     await db.collection('products').insertMany(newproducts)
-/*
-    if (value.inventory) {
-        await ctx.db.collection(StoreDef["inventory"].collection).insertMany(newproducts.map(function (p) {
-            return {
-                _ts: new Timestamp(0,0), // Empty timestamp will be replaced by the server to the current server time
-                partition_key: new_tenent.insertedId,
-                status: 'Required',
-                product_id: p._id,
-                category_id: p.category_id,
-                warehouse: 'EMEA',
-                qty: 1
-            }
-        }))
-    }
-*/
+
 }
 
-async function loadBlobImages(partition_key: string, catalogData: ConfigData, catalogFilePath: string): Promise<Map<string, {pathname: string}>> {
+async function loadBlobImages(log: (message: string) => void, partition_key: string, catalogData: ConfigData, catalogFilePath: string): Promise<Map<string, {pathname: string}>> {
     // Cleardown, then Create the container, allowing public access to blobs
 
-    await containerClient.createIfNotExists({access: 'blob'});
+    await containerClient.createIfNotExists();
 
     const existingBlobs = containerClient.listBlobsFlat();
     // now delete existing blobs
     for await (const blob of existingBlobs) {
-        console.log(`loadBlobImages: Deleting existing old blob ${blob.name}`);
+        log(`loadBlobImages: Deleting existing old blob ${blob.name}`);
         await containerClient.deleteBlob(blob.name);
     }
 
     let imagemap = new Map<string, {pathname: string}>()
 
-    console.log(`loadBlobImages: Loading inline images from json file...`)
+    log(`loadBlobImages: Loading inline images from json file...`)
     const fileregex = /.+\.([^.]+$)/
     for (const pathname of Object.keys(catalogData.images)) {
 
@@ -189,31 +175,31 @@ async function loadBlobImages(partition_key: string, catalogData: ConfigData, ca
             filepath = `${partition_key}/${pathname}`
 
         if (extension) {
-            console.log(`loadBlobImages:  writing ${filepath}`);
+            log(`loadBlobImages:  writing ${filepath}`);
             const bbClient = containerClient.getBlockBlobClient(filepath);
             
             try {
                 await bbClient.uploadData(b64, {
                     blobHTTPHeaders: { blobContentType: `image/${extension}` },
                     //abortSignal: AbortController.timeout(30 * 60 * 1000), // Abort uploading with timeout in 30mins
-                    onProgress: (ev) => console.log(ev)
+                    onProgress: (ev) => log(ev.toString())
                 });
 
-                console.log(`uploadStream succeeds, got ${bbClient.name}`);
+                log(`uploadStream succeeds, got ${bbClient.name}`);
                 imagemap.set(pathname, { pathname: bbClient.name })
             } catch (err: any) {
-                console.log(
+                log(
                 `uploadStream failed, requestId - ${err.details.requestId}, statusCode - ${err.statusCode}, errorCode - ${err.details.errorCode}`
                 );
             }
         } else {
-            console.error(`writeimages: cannoot find extension of image name ${pathname}`)
+            log(`ERROR: writeimages: cannot find extension of image name ${pathname}`)
         }
 
     }
 
 
-    console.log(`loadBlobImages: Loading file images...`)
+    log(`loadBlobImages: Loading file images...`)
     // loop through the tenant, products, categories, creating the images in blob
     for (const c of [...catalogData.products.Category, ...catalogData.products.Product, catalogData.tenant]) {
         if (c.image && c.image.pathname) {
@@ -222,11 +208,11 @@ async function loadBlobImages(partition_key: string, catalogData: ConfigData, ca
                     const filepath = `${catalogFilePath}/${c.image.pathname}`
                     const blobpath = `${partition_key}/${c.image.pathname}`
                     const blockBlobClient = containerClient.getBlockBlobClient(blobpath);
-                    console.log(`loadBlobImages: Uploading image ${filepath} to ${blobpath}`)
+                    log(`loadBlobImages: Uploading image ${filepath} to ${blobpath}`)
                     await blockBlobClient.uploadFile(filepath);
                     imagemap.set(c.image.pathname, { pathname: blobpath })
                 } catch (err: any) {
-                    console.error(`loadBlobImages: Cannot upload image pathname ${c.image.pathname} : ${JSON.stringify(err)}}`)
+                    log(`loadBlobImages: Cannot upload image pathname ${c.image.pathname} : ${JSON.stringify(err)}}`)
                 }
             }
         }
@@ -237,42 +223,42 @@ async function loadBlobImages(partition_key: string, catalogData: ConfigData, ca
     
 
 
-export async function initCatalog(catalogfile: string): Promise<TenantDefinition | void> {
+export async function initCatalog(catalogfile: string, log: (message: string) => void): Promise<TenantDefinition | void> {
     
     try {
         await client.connect();
         const db: mongoDB.Db = client.db(process.env.DB_NAME);
-        console.log('Connected to the database, creating local developer tenent');
+        log('Connected to the database, creating local developer tenent');
         
         const catalogFilePath = path.dirname(catalogfile)
         const catalogData: ConfigData = JSON.parse(await fs.readFile(catalogfile, 'utf-8'))
 
-        console.log(`Using Catalog file ${catalogfile} (relative path: ${catalogFilePath})`)
+        log(`Using Catalog file ${catalogfile} (relative path: ${catalogFilePath})`)
 
-        const imagemap = await loadBlobImages(catalogData.tenant.partition_key, catalogData, catalogFilePath)
+        const imagemap = await loadBlobImages(log, catalogData.tenant.partition_key, catalogData, catalogFilePath)
 
-        console.log (`Creating tenant... ${catalogData.tenant.name}`)
+        log (`Creating tenant... ${catalogData.tenant.name}`)
 
         let tenant = {...catalogData.tenant}
         if (tenant.image && tenant.image.pathname) {
             if (imagemap.has(tenant.image.pathname)) {
                 tenant.image = imagemap.get(tenant.image.pathname) as { pathname: string}
             } else {
-                console.error(`Cannot find image for Tenant ${tenant.name}:  ${tenant.image.pathname}`)
+                log(`ERROR: Cannot find image for Tenant ${tenant.name}:  ${tenant.image.pathname}`)
             }
         }
         await db.collection('tenant').deleteMany({})
         await db.collection('tenant').insertOne({ ...tenant })
 
 
-        await populateTenant(db, catalogData.tenant.partition_key, catalogData, imagemap);
+        await populateTenant(log, db, catalogData.tenant.partition_key, catalogData, imagemap);
         return tenant
 
     } catch (error) {
-        console.error('Error connecting to the database or accessing the catalog file:', error);
+        log(`ERROR: connecting to the database or accessing the catalog file: ${error}`);
     } finally {
         await client.close();
-        console.log('Disconnected from the database');
+        log('Disconnected from the database');
     }
 }
 
@@ -283,7 +269,7 @@ if (process.argv[1].match(/init_config\.[jt]s$/)) {
         console.error('Usage: node init_config.js <catalogfile.json>');
         process.exit(1);
     }
-    initCatalog(process.argv[2])
+    initCatalog(process.argv[2], console.log)
 }
 
 

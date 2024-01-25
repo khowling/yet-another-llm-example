@@ -7,12 +7,13 @@ import { MongoClient, ObjectId } from 'mongodb'
 import { OpenAIClient, type ChatRequestMessage } from '@azure/openai'
 import { DefaultAzureCredential,  } from '@azure/identity';
 import { ProductOrCategory, TenantDefinition, containerClient, initCatalog } from './init_config'
-import Index from './components/index'
+import Index, { HTMLPage } from './components/page'
 import Products from './components/products'
 import Help from "./components/help";
 import TextResponse from "./components/textResponse";
 import Cart from "./components/cart";
 import Llm from "./components/llm";
+import TextStream from "./components/textStream";
 
 
 // Going to use Buns embedded DB for session info, just for testing, for production, use mongo/cosmos!
@@ -64,45 +65,80 @@ const explore = async (session : Cookie<any>, partition_key: string, type: 'Cate
 
 const app = new Elysia()
     .use(staticPlugin())
+    .state('tenant', {} as TenantDefinition)
     .state('partition_key', '' as string)
+    .state('initial_system_message', '' as string)
     .use(html())
+    .get('/load-catalogue', ({ cookie: { session }}) => {
+        session.remove()
+        return <TextStream sseUrl='/load-catalogue-sse' runEvent='running' completeEvent='done'/>
+    })
+    .get('/load-catalogue-sse', async ({store}) => new Stream(async (stream) => {
+        var messages = ''
+        var log = (msg:string) => { messages += <div>{msg}</div>; stream.send(messages)}
+        try {
+            stream.send ('Calling initCatalog with [setup/food.json]...')
+            let tenant = await initCatalog('setup/food.json', log) as TenantDefinition
+            if (!tenant) throw new Error('failed to create tenant')
+
+            // Setting partition key and initial system message
+            store.tenant = tenant
+            store.partition_key = tenant.partition_key
+            log (`Storing tenant & partition_key ${store.partition_key}`)
+
+            const db = await getDb();
+            const cat_prods = await db.collection('products').find({ partition_key: store.partition_key }).toArray() as unknown as Array<ProductOrCategory>
+            store.initial_system_message = tenant.aiSystemMessage + cat_prods.filter(c => c.type === 'Category').map (c => `.  In the Category "${c.heading}", we sell ${cat_prods.filter(p => p.type === "Product" && c._id.equals(p.category_id) ).map(p => `"${p.heading}"`).join(' and ')}`).join('. ')
+            log (`Storing initial_system_message: ${store.initial_system_message}`)
+
+            stream.event = 'done'
+            stream.send(
+                <div><div>{messages}</div>
+                <div role="alert" class="alert alert-info">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Success, click <a  className="link link-primary" href="/">here</a></span>
+                </div></div>);
+            stream.close()
+        } catch (e: any) {
+            console.error(e);
+            stream.event = 'done'
+            stream.send(
+                <div><div>{messages}</div>
+                <div role="alert" class="alert alert-error">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>Error! Task failed: ${e}.</span>
+                </div></div>);
+            stream.close()
+        }
+    }, { event: 'running' }))
     .get('/reset', ({set,  cookie: { session }}) => {
         session.remove()
         set.headers['HX-Refresh'] = 'true'
         set.headers['HX-Redirect'] = '/'
     })
-    .get('/', async ({set, store,  cookie: { session } }) => {
+    .get('/', ({set, store,  cookie: { session } }) => {
         try {
-            console.log (`/  session=${session}`)
+
+            if (!store.partition_key) {
+                set.redirect = '/load-catalogue'
+                return
+            }
+
             if (!session.value) {
                 console.log (`/  creating new session`)
                 const { sessionid } = newSession.all(Date.now())[0]
                 session.value = sessionid
-            } else {
-                console.log (`/  existing session`)
-            }
 
-            const db = await getDb();
-            var tenant = await db.collection('tenant').findOne({}) as unknown as TenantDefinition
-            if (!tenant) {
-                console.log ('lets create a tenant')
-                tenant = await initCatalog('setup/food.json') as TenantDefinition
-                if (!tenant) throw new Error('failed to create tenant')
-            }
-            store.partition_key = tenant.partition_key
-            console.log (`/ storing partition_key ${store.partition_key}`)
+                newPromptHistory.run({
+                    $sessionid: session.value, 
+                    $date: Date.now(), 
+                    $role: "system", 
+                    $content: store.initial_system_message
+                })
 
-            const catandprods = await db.collection('products').find({ partition_key: store.partition_key }).toArray() as unknown as Array<ProductOrCategory>
-            const cats = catandprods.filter(c => c.type === 'Category').map (c => `In the Category "${c.heading}", we sell ${catandprods.filter(p => p.type === "Product" && c._id.equals(p.category_id) ).map(p => `"${p.heading}"`).join(' and ')}`).join('. ')
+            } 
 
-            newPromptHistory.run({
-                $sessionid: session.value, 
-                $date: Date.now(), 
-                $role: "system", 
-                $content: tenant.aiSystemMessage + cats
-            })
-            
-            return <Index tenant={tenant} imageBaseUrl={imageBaseUrl}/>
+            return <Index tenant={store.tenant} imageBaseUrl={imageBaseUrl}/>
         } catch (error: any) {
             set.status = 500
             return JSON.stringify(error)
@@ -222,7 +258,7 @@ const app = new Elysia()
         } catch (e: any) {
             console.error(e);
             stream.event = `close${chatid}`
-            stream.send(`<div class="chat-bubble chat-bubble-warning">I'm not availabile right now, please continue to use the / commands to explore and order our products (${JSON.stringify(e)})</div>`);
+            stream.send(`<div class="chat-bubble chat-bubble-warning">I'm not available right now, please continue to use the / commands to explore and order our products (${e ? JSON.stringify(e) : ''})</div>`);
             stream.close()
         }
     }, { event: chatid }))
