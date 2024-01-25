@@ -34,7 +34,7 @@ const murl : string = process.env.AISHOP_MONGO_CONNECTION_STR || "mongodb://loca
 const client = new MongoClient(murl);
 
 const defCredential = new DefaultAzureCredential()
-//const aiclient = new OpenAIClient(process.env.AISHOP_OPENAI_ENDPOINT as string, defCredential);
+const aiclient = new OpenAIClient(process.env.AISHOP_OPENAI_ENDPOINT as string, defCredential);
 
 
 const imageBaseUrl = '/file' // process.env.AISHOP_STORAGE_ACCOUNT ? `https://${process.env.AISHOP_STORAGE_ACCOUNT}.blob.core.windows.net/${process.env.AISHOP_IMAGE_CONTAINER}` : `https://127.0.0.1:10000/devstoreaccount1/${process.env.AISHOP_IMAGE_CONTAINER}`
@@ -167,114 +167,16 @@ const app = new Elysia()
             question: t.String()
         })
     })
-    .get('/api/chat/completion/:chatid', async ({params: { chatid }, cookie: { session}}) => {//new Stream(async (stream) => {
+    .get('/api/chat/completion/:chatid', async ({params: { chatid }, cookie: { session}}) => new Stream(async (stream) => {
 
         try {
 
             if (!process.env.AISHOP_OPENAI_MODELNAME) throw new Error('AISHOP_OPENAI_MODELNAME not set')
             const prompt_history = listPromptHistory.all({$sessionid: session.value}) 
-            const oldMessages =  prompt_history.map(p => {return {role: p.role, content: p.content}})
-            //const lastQuestion = prompt_history.find(p => p.date === parseInt(chatid))
+            const messages =  prompt_history.map(p => {return {role: p.role, content: p.content}}) as Array<ChatRequestMessage>
 
-            //as Array<ChatRequestMessage>
-            
-            
+            const events = await aiclient.streamChatCompletions(process.env.AISHOP_OPENAI_MODELNAME as string, messages, { maxTokens: 256,  });
 
-            // Get the token
-            defCredential.getToken("https://cognitiveservices.azure.com/.default").then((token) => {
-            if (token) {
-                // Set the Authorization header on a fetch request
-                const body = JSON.stringify({
-                    messages: oldMessages,
-                    //role: lastQuestion?.role,
-                    //content: lastQuestion?.content,
-                    max_tokens: 256
-                })
-                console.log (body)
-                return fetch(`${process.env.AISHOP_OPENAI_ENDPOINT}openai/deployments/${process.env.AISHOP_OPENAI_MODELNAME}/chat/completions?api-version=2023-12-01-preview`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token.token}`,
-                    },
-                    body
-                })
-                .then((response) => response.body)
-                .then((rb) => {
-                    /*
-                    const json = await Bun.readableStreamToJSON(body as ReadableStream<Uint8Array>);
-                    const content = json?.choices[0]?.delta?.content;
-                    if (content) stream.send(content);     
-                    console.log(json);
-                    */
-                    const reader = rb?.getReader() as ReadableStreamDefaultReader<Uint8Array>;
-                    return new ReadableStream({
-                        start(controller) {
-                          // The following function handles each data chunk
-                          function push() {
-                            // "done" is a Boolean and value a "Uint8Array"
-                            reader.read().then(({ done, value }) => {
-                              // If there is no more data to read
-                              if (done) {
-                                console.log("done", done);
-                                controller.close();
-                                return;
-                              }
-                              // Get the data and send it to the browser via the controller
-                              controller.enqueue(Buffer.from(value).toString('utf8'));
-                              // Check chunks by logging to the console
-                              console.log(done, Buffer.from(value).toString('utf8'));
-                              push();
-                            });
-                          }
-                  
-                          push();
-                        },
-                      });
-
-                    /*
-                    if (reader) {
-                        reader.read().then(({ done, value }) => {
-                        if (done) {
-                            console.log("Stream complete");
-                            return;
-                        }
-
-                        if (value) {
-                            
-                            const jsonString = Buffer.from(value).toString('utf8')
-                            console.log(`Received raw:  ${jsonString}`);
-                            try {
-                                const parsedData = JSON.parse(jsonString.replace(/^data: /, ''))
-                                if (parsedData.error) {
-                                    stream.event = `close${chatid}`
-                                    stream.send(`<div class="chat-bubble chat-bubble-info">We ran into a issue: ${parsedData.error.message}</div>`);
-                                    stream.close()
-                                    return
-                                }
-                                const content = parsedData?.choices[0]?.delta?.content;
-                                if (content) stream.send(content);
-                                console.log(jsonString);
-                            } catch (e: any) {
-                                console.error(e);
-                            }
-                        }
-                        });
-                    }
-                    */
-                  // …
-                }).catch((err) => {
-                console.error("An error occurred: ", err);
-                });
-            }
-            }).catch((err) => {
-            console.error("An error occurred: ", err);
-            });
-
-            /*
-            const events = await aiclient.streamChatCompletions(process.env.AISHOP_OPENAI_MODELNAME as string, phist, { maxTokens: 256,  });
-
-            
             let response = '';
             let isopencode = false;
 
@@ -306,9 +208,6 @@ const app = new Elysia()
                 }
             }
 
-            console.log ('sleeping for 1s')
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
             newPromptHistory.run({
                 $sessionid: session.value, 
                 $date: Date.now(), 
@@ -317,24 +216,16 @@ const app = new Elysia()
             })
 
             stream.event = `close${chatid}`
-            //stream.send(`event: close${chatid}\n`);
             stream.send(`<div class="chat-bubble chat-bubble-info">${response}</div>`);
             stream.close()
-            console.log (`completed: ${chatid}`)
-
-            */
 
         } catch (e: any) {
-            console.log ('kh error')
             console.error(e);
-            //stream.send(`event: close${chatid}\n`);
-            //stream.event = `close${chatid}`
-            //stream.send(`<div class="chat-bubble chat-bubble-warning">I'm not availabile right now, please continue to use the / commands to explore and order our products (${JSON.stringify(e)})</div>`);
-            //stream.close()
+            stream.event = `close${chatid}`
+            stream.send(`<div class="chat-bubble chat-bubble-warning">I'm not availabile right now, please continue to use the / commands to explore and order our products (${JSON.stringify(e)})</div>`);
+            stream.close()
         }
-    //}, { event: chatid }))
-    })
-    
+    }, { event: chatid }))
     .listen(3000)
 
 console.log(
