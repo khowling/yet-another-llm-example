@@ -63,11 +63,11 @@ The easiest way to deploy is using the *Azure Cloud shell*, as this has the Azur
 
 ## To run the project locally on your laptop (If you want to change/contribute)
 
-To run this project as a developer, you will need a Linux environment with access to a command shell with `nodejs`. If using Mac, this should be no problem, if using a Windows laptop, use the default Ubuntu distribution on the amazing `WSL`:
+To run this project as a developer, you will need a Linux environment with access to a command shell with [Bun](https://bun.sh/). If using Mac, this should be no problem, if using a Windows laptop, use the default Ubuntu distribution on the amazing [WSL 2](https://learn.microsoft.com/en-us/windows/wsl/about):
 
  * Follow steps [here](https://learn.microsoft.com/en-us/windows/wsl/install) to install Ubuntu on WSL
  * Then [here](https://code.visualstudio.com/) for Visual Studio Code, then the VSCode extension for WSL [here](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)
- * Then steps 1-3 [here](https://github.com/nodesource/distributions?tab=readme-ov-file#installation-instructions) will install ndoejs 
+ * Then  [here](https://bun.sh/docs/installation) to install Bun 
 
 ### Dependencies
 
@@ -97,12 +97,11 @@ bash setup/azure/az.dependencies.sh $location $uniqueName >app/shop/.env
 
 # Build & run the app
 cd app/shop
-npm i
-npx tsc
-npm start
+bun install
+npm run dev
 ```
 
-To run & debug the app in VSCode, launch  `VSCode`, and using the `WSL Remote` extension, open the WLS folder where the project is cloned, and run the server as shown in the image below:
+To run & debug the app in VSCode, launch  `VSCode`, and using the `WSL Remote` extension, open the WLS folder where the project is cloned, and run `Launch Bun` like in the image below:
 
 
 ![VSCode Debug](./docs/vscodedebug.png)
@@ -128,7 +127,7 @@ Build the application container from your locally cloned source code, and push t
 # Ensure you are in the root directory of this project, and run
 (source app/shop/.env && 
    az acr build -r $AISHOP_ACR_NAME -t aishop/shop:localdev01  app/shop &&
-   az containerapp revision copy -n $AISHOP_ACA_NAME -g AISHOP_RG_NAME --image 
+   az containerapp revision copy -n $AISHOP_ACA_NAME -g $AISHOP_RG_NAME --image $AISHOP_ACR_NAME.azurecr.io/aishop/shop:localdev01
 )
 ```
 

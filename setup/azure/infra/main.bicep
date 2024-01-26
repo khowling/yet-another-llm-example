@@ -10,6 +10,10 @@ param localDeveloperId string = ''
 @description('Location for the cluster.')
 param location string = resourceGroup().location
 
+@description('Build the application if points to a repo, otherwise just deploy placeholder app')
+param repoUrl string = ''
+param repoBranch string = 'main'
+
 // @description('Username for mongo admin user')
 // param mongoAdminUser string = 'admin'
 
@@ -19,17 +23,10 @@ param location string = resourceGroup().location
 // @maxLength(128)
 // param mongoAdminPassword string
 
-@description('Git Repository Url')
-param repoUrl string 
-
-@description('Git Repository Branch')
-param branch string = 'main'
-
 
 // If we havnt passed in an identity to create permissions against, create one
-var managedIdentityName = 'aishop-${uniqueName}'
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
-  name: managedIdentityName
+  name: 'aishop-${uniqueName}'
   location: location
 }
 
@@ -114,35 +111,59 @@ module openai 'ai.bicep' = {
   }
 }
 
-module containerapps 'acaenv.bicep' =  {
+
+module buildImage 'br/public:deployment-scripts/build-acr:2.0.2' = if (!empty(repoUrl)) {
+  name: 'buildAcrImage-linux-dapr'
+  params: {
+    AcrName: acr.outputs.acrName
+    location: location
+    gitRepositoryUrl:  repoUrl
+    gitBranch: repoBranch
+    buildWorkingDirectory:  'app/shop'
+    imageName: 'aishop/ui'
+  }
+}
+
+
+module containerapps 'containerapps.bicep' = {
   name: 'deploy-containerapps'
   params: {
     uniqueName: uniqueName
     location: location
-  }
-}
-
-module deployapp 'deployapp.bicep' = if(!empty(repoUrl)) {
-  name: 'deploy-deployapp'
-  params: {
-    location: location
-    //managedIdentityId: managedIdentity.properties.principalId
-    gitRepositoryUrl: repoUrl
-    gitBranch: branch
-    managedIdentityName: managedIdentityName
+    managedIdentityId: managedIdentity.id
     acrName: acr.outputs.acrName
+    acrImage: !empty(repoUrl) ? buildImage.outputs.acrImage : 'mcr.microsoft.com/k8se/quickstart:latest'
     kvSecretUris: keyvault.outputs.secretUris
-    AcaEnvironmentId: containerapps.outputs.acaEnvId
-    storageAccountName: storage.outputs.storageAccountName
-    openAIEndpoint: openai.outputs.openAIEndpoint
-    modelName: openai.outputs.openAIModel
+    envConfig: [
+      {
+        name: 'AISHOP_STORAGE_ACCOUNT'
+        value: storage.outputs.storageAccountName
+      }
+      {
+        name: 'AISHOP_OPENAI_ENDPOINT'
+        value: openai.outputs.openAIEndpoint
+      }
+      {
+        name: 'AISHOP_OPENAI_MODELNAME'
+        value: modelName
+      }
+      {
+        name: 'AISHOP_IMAGE_CONTAINER'
+        value: blobImageContainerName
+      }
+      {
+        // Required for the @azure/identity DefaultAzureCredential
+        // See https://github.com/microsoft/azure-container-apps/issues/325#issuecomment-1265380377
+        name: 'AZURE_CLIENT_ID'
+        value: managedIdentity.properties.clientId
+      }
+    ]
   }
 }
-
 
 output cosmosConnectionURL string = cosmosMongo42.outputs.cosmosConnectionURL
 output storageAccountName string = storage.outputs.storageAccountName
 output openAIEndpoint string = openai.outputs.openAIEndpoint
 output openAIModel string = openai.outputs.openAIModel
 output acrName string = acr.outputs.acrName
-
+output acaName string = containerapps.outputs.acaName

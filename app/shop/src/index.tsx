@@ -14,6 +14,7 @@ import TextResponse from "./components/textResponse";
 import Cart from "./components/cart";
 import Llm from "./components/llm";
 import TextStream from "./components/textStream";
+import Command from "./components/command";
 
 
 // Going to use Buns embedded DB for session info, just for testing, for production, use mongo/cosmos!
@@ -29,7 +30,7 @@ const newSession = memorydb.query<{sessionid: number}, number>(`INSERT INTO sess
 const newCartItem = memorydb.query<null, {$sessionid: number, $productid: string, $heading: string, $qty: number}>('INSERT INTO cart VALUES  ($sessionid, $productid, $heading, $qty)');
 const listCart = memorydb.query<{productid: string, heading: string,  qty: number}, {$sessionid: number}>('SELECT productid, heading, qty FROM cart WHERE sessionid = $sessionid;');
 const newPromptHistory = memorydb.query<null, {$sessionid: number, $date: number, $role: string, $content: string}>('INSERT INTO prompt_history VALUES  ($sessionid, $date, $role, $content)');
-const listPromptHistory = memorydb.query<{date: number, role: string, content: string}, {$sessionid: number}>('SELECT date, role, content FROM prompt_history WHERE sessionid = $sessionid ORDER BY date ASC;');
+const listPromptHistory = memorydb.query<{role: string, content: string}, {$sessionid: number}>('SELECT role, content FROM prompt_history WHERE sessionid = $sessionid ORDER BY date ASC;');
 
 const murl : string = process.env.AISHOP_MONGO_CONNECTION_STR || "mongodb://localhost:27017/azshop?replicaSet=rs0"
 const client = new MongoClient(murl);
@@ -69,28 +70,29 @@ const app = new Elysia()
     .state('partition_key', '' as string)
     .state('initial_system_message', '' as string)
     .use(html())
-    .get('/load-catalogue', ({ cookie: { session }}) => {
+    .get('/load-catalogue', ({ query: {f}, cookie: { session }}) => {
         session.remove()
-        return <TextStream sseUrl='/load-catalogue-sse' runEvent='running' completeEvent='done'/>
+        return <TextStream sseUrl={`/load-catalogue-sse${f? `?f=${f}` : ''}`} runEvent='running' completeEvent='done'/>
+    }, {
+        query: t.Object({
+            f: t.Optional(t.String())
+        })
     })
-    .get('/load-catalogue-sse', async ({store}) => new Stream(async (stream) => {
+    .get('/load-catalogue-sse', async ({query: {f}, store}) => new Stream(async (stream) => {
+        var filename = f || 'setup/food.json'
         var messages = ''
         var log = (msg:string) => { messages += <div>{msg}</div>; stream.send(messages)}
+
+        log('Removing existing app store tenant info...')
+        store.tenant = {} as TenantDefinition
+        store.partition_key = ''
+        store.initial_system_message = ''
+        
         try {
-            stream.send ('Calling initCatalog with [setup/food.json]...')
-            let tenant = await initCatalog('setup/food.json', log) as TenantDefinition
+            stream.send (`Calling initCatalog with [${filename}]...`)
+            let tenant = await initCatalog(filename, log) as TenantDefinition
             if (!tenant) throw new Error('failed to create tenant')
-
-            // Setting partition key and initial system message
-            store.tenant = tenant
-            store.partition_key = tenant.partition_key
-            log (`Storing tenant & partition_key ${store.partition_key}`)
-
-            const db = await getDb();
-            const cat_prods = await db.collection('products').find({ partition_key: store.partition_key }).toArray() as unknown as Array<ProductOrCategory>
-            store.initial_system_message = tenant.aiSystemMessage + cat_prods.filter(c => c.type === 'Category').map (c => `.  In the Category "${c.heading}", we sell ${cat_prods.filter(p => p.type === "Product" && c._id.equals(p.category_id) ).map(p => `"${p.heading}"`).join(' and ')}`).join('. ')
-            log (`Storing initial_system_message: ${store.initial_system_message}`)
-
+             
             stream.event = 'done'
             stream.send(
                 <div><div>{messages}</div>
@@ -110,32 +112,48 @@ const app = new Elysia()
                 </div></div>);
             stream.close()
         }
-    }, { event: 'running' }))
-    .get('/reset', ({set,  cookie: { session }}) => {
+    }, { event: 'running' }), {
+        query: t.Optional(t.Object({
+            f: t.String()
+        }))
+    })
+    .get('/reset', ({set, store, cookie: { session }}) => {
         session.remove()
+        store.partition_key = ''
         set.headers['HX-Refresh'] = 'true'
         set.headers['HX-Redirect'] = '/'
     })
-    .get('/', ({set, store,  cookie: { session } }) => {
+    .get('/', async ({set, store,  cookie: { session } }) => {
         try {
 
             if (!store.partition_key) {
-                set.redirect = '/load-catalogue'
-                return
+                // 1st time the app has been used.
+                // Setting partition key and initial system message
+                const db = await getDb();
+                const tenant = await db.collection('tenant').findOne({}) as unknown as TenantDefinition
+                
+                if (!tenant) {
+                    console.log (`No Tenant found, redirecting to /load-catalogue`)
+                    set.redirect = '/load-catalogue'
+                    return
+                }
+
+                store.tenant = tenant
+                store.partition_key = tenant.partition_key
+                console.log (`Storing tenant, partition_key & system message: (partition_key=${store.partition_key})`)
+
+                const cat_prods = await db.collection('products').find({ partition_key: store.partition_key }).toArray() as unknown as Array<ProductOrCategory>
+                store.initial_system_message = 
+                    tenant.aiSystemMessage + '. ' +
+                    cat_prods.filter(c => c.type === 'Category').map (c => `In the Category name "${c.heading}", with ID ${c._id}, we sell ${cat_prods.filter(p => p.type === "Product" && c._id.equals(p.category_id) ).map(p => p.heading).join(' and ')}`).join('. ') + '. ' +
+                    'Instead of using the Category name or ID in your output directly, use this HTML format instead' + <Command command='/explore'subcommand="EXAMPLECATEGORY" args={new ObjectId(123)}/> + ', replacing EXAMPLECATEGORY with the actual category name and "' + new ObjectId(123) + '" with its ID.'
+
             }
 
             if (!session.value) {
                 console.log (`/  creating new session`)
                 const { sessionid } = newSession.all(Date.now())[0]
                 session.value = sessionid
-
-                newPromptHistory.run({
-                    $sessionid: session.value, 
-                    $date: Date.now(), 
-                    $role: "system", 
-                    $content: store.initial_system_message
-                })
-
             } 
 
             return <Index tenant={store.tenant} imageBaseUrl={imageBaseUrl}/>
@@ -203,15 +221,14 @@ const app = new Elysia()
             question: t.String()
         })
     })
-    .get('/api/chat/completion/:chatid', async ({params: { chatid }, cookie: { session}}) => new Stream(async (stream) => {
+    .get('/api/chat/completion/:chatid', async ({params: { chatid }, store: { initial_system_message}, cookie: { session}}) => new Stream(async (stream) => {
 
         try {
 
             if (!process.env.AISHOP_OPENAI_MODELNAME) throw new Error('AISHOP_OPENAI_MODELNAME not set')
-            const prompt_history = listPromptHistory.all({$sessionid: session.value}) 
-            const messages =  prompt_history.map(p => {return {role: p.role, content: p.content}}) as Array<ChatRequestMessage>
+            const prompt_history = [{role: "system", content: initial_system_message}, ...listPromptHistory.all({$sessionid: session.value})] as Array<ChatRequestMessage>
 
-            const events = await aiclient.streamChatCompletions(process.env.AISHOP_OPENAI_MODELNAME as string, messages, { maxTokens: 256,  });
+            const events = await aiclient.streamChatCompletions(process.env.AISHOP_OPENAI_MODELNAME as string, prompt_history, { maxTokens: 256,  });
 
             let response = '';
             let isopencode = false;
@@ -262,7 +279,7 @@ const app = new Elysia()
             stream.close()
         }
     }, { event: chatid }))
-    .listen(3000)
+    .listen(process.env.PORT || 3000)
 
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`

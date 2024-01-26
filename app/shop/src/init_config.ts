@@ -155,9 +155,8 @@ async function loadBlobImages(log: (message: string) => void, partition_key: str
 
     await containerClient.createIfNotExists();
 
-    const existingBlobs = containerClient.listBlobsFlat();
     // now delete existing blobs
-    for await (const blob of existingBlobs) {
+    for await (const blob of containerClient.listBlobsFlat()) {
         log(`loadBlobImages: Deleting existing old blob ${blob.name}`);
         await containerClient.deleteBlob(blob.name);
     }
@@ -182,15 +181,13 @@ async function loadBlobImages(log: (message: string) => void, partition_key: str
                 await bbClient.uploadData(b64, {
                     blobHTTPHeaders: { blobContentType: `image/${extension}` },
                     //abortSignal: AbortController.timeout(30 * 60 * 1000), // Abort uploading with timeout in 30mins
-                    onProgress: (ev) => log(ev.toString())
+                    //onProgress: (ev) => log(ev.toString())
                 });
 
                 log(`uploadStream succeeds, got ${bbClient.name}`);
                 imagemap.set(pathname, { pathname: bbClient.name })
             } catch (err: any) {
-                log(
-                `uploadStream failed, requestId - ${err.details.requestId}, statusCode - ${err.statusCode}, errorCode - ${err.details.errorCode}`
-                );
+                log(`uploadStream failed, requestId - ${err.details.requestId}, statusCode - ${err.statusCode}, errorCode - ${err.details.errorCode}`);
             }
         } else {
             log(`ERROR: writeimages: cannot find extension of image name ${pathname}`)
@@ -269,7 +266,7 @@ if (process.argv[1].match(/init_config\.[jt]s$/)) {
         console.error('Usage: node init_config.js <catalogfile.json>');
         process.exit(1);
     }
-    initCatalog(process.argv[2], console.log)
+    await initCatalog(process.argv[2], console.log)
 }
 
 
