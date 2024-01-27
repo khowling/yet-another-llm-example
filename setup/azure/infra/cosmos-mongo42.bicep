@@ -89,3 +89,4 @@ resource mongoColl 'Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/colle
 
 var connectionStrNoDB = split(first(cosmosAccount.listConnectionStrings().connectionStrings).connectionString, '/?')
 output cosmosConnectionURL string = '${connectionStrNoDB[0]}/${dbname}?${connectionStrNoDB[1]}'
+output cosmosAccountName string = cosmosAccount.name

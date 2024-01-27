@@ -10,15 +10,10 @@ param location string = resourceGroup().location
 param acrSku string = 'Basic'
 
 @description('Specifies the object ID of a user, service principal or security group in the Azure Active Directory tenant for the vault. The object ID must be unique for the list of access policies. Get it by using Get-AzADUser or Get-AzADServicePrincipal cmdlets.')
-param objectId string
+param managedIdentityId string
 
-@description('principle type')
-@allowed([
-  'User'
-  'ServicePrincipal'
-])
-param principalType string 
-
+@description('Id of the local developer to be added access to the storage account')
+param localDeveloperId string
 
 resource acrResource 'Microsoft.ContainerRegistry/registries@2023-11-01-preview' = {
   name: 'aishop${uniqueName}'
@@ -44,25 +39,43 @@ resource acrPush 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' ex
   name: '8311e382-0749-4cb8-b61a-304f252e45ec'
 }
 
+@description('This is the general Contributor role, needed for build tasks')
+resource contributor 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
+  scope: subscription()
+  name: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
+}
+
+
 // https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/role-based-access-control#azure-openai-roles
-resource roleAssignmentPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(acrResource.id, objectId, acrPull.id)
+resource roleAssignmentPullMI 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(acrResource.id, managedIdentityId, acrPull.id)
   scope: acrResource
   properties: {
     roleDefinitionId: acrPull.id
-    principalId: objectId
-    principalType: principalType
+    principalId: managedIdentityId
+    principalType: 'ServicePrincipal'
   }
 }
 
 // https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/role-based-access-control#azure-openai-roles
-resource roleAssignmentPush 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(acrResource.id, objectId, acrPush.id)
+resource roleAssignmentBuildMI 'Microsoft.Authorization/roleAssignments@2022-04-01' =  {
+  name: guid(acrResource.id, managedIdentityId, contributor.id)
+  scope: acrResource
+  properties: {
+    roleDefinitionId: contributor.id
+    principalId: managedIdentityId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/role-based-access-control#azure-openai-roles
+resource roleAssignmentPushDev 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(localDeveloperId)) {
+  name: guid(acrResource.id, localDeveloperId, acrPush.id)
   scope: acrResource
   properties: {
     roleDefinitionId: acrPush.id
-    principalId: objectId
-    principalType: principalType
+    principalId: localDeveloperId
+    principalType: 'User'
   }
 }
 

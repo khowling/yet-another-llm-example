@@ -120,7 +120,7 @@ resource containerapp 'Microsoft.App/containerApps@2023-05-01' = {
         external: true
         allowInsecure: true
         transport: 'http'
-        targetPort: 3000
+        targetPort: 80
       }
     }
     template: {
@@ -147,4 +147,4 @@ resource containerapp 'Microsoft.App/containerApps@2023-05-01' = {
   }
 }
 
-
+output acaName string = containerapp.name

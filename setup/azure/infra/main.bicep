@@ -10,8 +10,9 @@ param localDeveloperId string = ''
 @description('Location for the cluster.')
 param location string = resourceGroup().location
 
-@description('Deploy the application if true, otherwise just deploy dependencies to be used by the application')
-param deployApp bool = false
+@description('Build the application if points to a repo, otherwise just deploy placeholder app')
+param repoUrl string = ''
+param repoBranch string = 'main'
 
 // @description('Username for mongo admin user')
 // param mongoAdminUser string = 'admin'
@@ -52,8 +53,8 @@ module acr './acr.bicep' = {
   params: {
     uniqueName: uniqueName
     location: location
-    objectId: managedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
+    managedIdentityId: managedIdentity.properties.principalId
+    localDeveloperId: localDeveloperId
   }
 }
 
@@ -88,8 +89,7 @@ module storage 'storage.bicep' = {
         name: blobImageContainerName
       }
     ]
-    objectId: managedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
+    managedIdentityId: managedIdentity.properties.principalId
     localDeveloperId: localDeveloperId
   }
 }
@@ -106,33 +106,33 @@ module openai 'ai.bicep' = {
     location: location
     modelName: modelName
     modelVersion: location == 'westeurope' ? westEUModelVersion : westUSModelVersion
-    objectId: managedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
+    managedIdentityId: managedIdentity.properties.principalId
     localDeveloperId: localDeveloperId
   }
 }
 
 
-module buildImage 'br/public:deployment-scripts/build-acr:2.0.2' = if (deployApp) {
+module buildImage 'br/public:deployment-scripts/build-acr:2.0.2' = if (!empty(repoUrl)) {
   name: 'buildAcrImage-linux-dapr'
   params: {
     AcrName: acr.outputs.acrName
     location: location
-    gitRepositoryUrl:  'https://github.com/khowling/ai-shop.git'
+    gitRepositoryUrl:  repoUrl
+    gitBranch: repoBranch
     buildWorkingDirectory:  'app/shop'
     imageName: 'aishop/ui'
   }
 }
 
 
-module containerapps 'containerapps.bicep' = if (deployApp) {
+module containerapps 'containerapps.bicep' = {
   name: 'deploy-containerapps'
   params: {
     uniqueName: uniqueName
     location: location
     managedIdentityId: managedIdentity.id
     acrName: acr.outputs.acrName
-    acrImage: buildImage.outputs.acrImage
+    acrImage: !empty(repoUrl) ? buildImage.outputs.acrImage : 'mcr.microsoft.com/k8se/quickstart:latest'
     kvSecretUris: keyvault.outputs.secretUris
     envConfig: [
       {
@@ -152,6 +152,10 @@ module containerapps 'containerapps.bicep' = if (deployApp) {
         value: blobImageContainerName
       }
       {
+        name: 'PORT'
+        value: '80'
+      }
+      {
         // Required for the @azure/identity DefaultAzureCredential
         // See https://github.com/microsoft/azure-container-apps/issues/325#issuecomment-1265380377
         name: 'AZURE_CLIENT_ID'
@@ -161,8 +165,9 @@ module containerapps 'containerapps.bicep' = if (deployApp) {
   }
 }
 
-output cosmosConnectionURL string = cosmosMongo42.outputs.cosmosConnectionURL
+output cosmosAccountName string = cosmosMongo42.outputs.cosmosAccountName
 output storageAccountName string = storage.outputs.storageAccountName
 output openAIEndpoint string = openai.outputs.openAIEndpoint
 output openAIModel string = openai.outputs.openAIModel
 output acrName string = acr.outputs.acrName
+output acaName string = containerapps.outputs.acaName

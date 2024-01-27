@@ -1,20 +1,17 @@
-# Build stage
-FROM node:lts AS build-env
-COPY . /app
+FROM oven/bun
+
 WORKDIR /app
 
-RUN npm i && npx tsc
+COPY package.json .
+COPY bun.lockb .
 
-# Create final production stage
-FROM node:lts AS run-env
-WORKDIR /app
-COPY --from=build-env /app/dist ./dist
-COPY --from=build-env /app/node_modules ./node_modules
-COPY public ./public
-COPY views ./views
-COPY setup ./setup
-COPY package.json ./
+RUN bun install --production
 
-ENV NODE_ENV="production"
-EXPOSE 3000
-CMD ["node", "./dist/app.js"]
+COPY src src
+COPY public public
+COPY setup setup
+COPY tsconfig.json .
+# COPY public public
+
+ENV NODE_ENV production
+CMD ["bun", "src/index.tsx"]

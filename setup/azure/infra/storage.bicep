@@ -8,7 +8,7 @@ param uniqueName string
 param location string = resourceGroup().location
 
 @description('Specifies the object ID of a user, service principal or security group in the Azure Active Directory tenant for the vault. The object ID must be unique for the list of access policies. Get it by using Get-AzADUser or Get-AzADServicePrincipal cmdlets.')
-param objectId string
+param managedIdentityId string
 
 @description('Blob public access settting')
 @allowed([
@@ -17,13 +17,6 @@ param objectId string
   'Container'
 ])
 param publicAccess string = 'None'
-
-@description('principle type')
-@allowed([
-  'User'
-  'ServicePrincipal'
-])
-param principalType string 
 
 @description('Array of Blob container names to create')
 param blobContainers array
@@ -74,12 +67,12 @@ resource blobStorageDataContributorRoleDefinition 'Microsoft.Authorization/roleD
 }
 
 resource roleAssignmentApp 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(StorageAccount.id, objectId, blobStorageDataContributorRoleDefinition.id)
+  name: guid(StorageAccount.id, managedIdentityId, blobStorageDataContributorRoleDefinition.id)
   scope: StorageAccount
   properties: {
     roleDefinitionId: blobStorageDataContributorRoleDefinition.id
-    principalId: objectId
-    principalType: principalType
+    principalId: managedIdentityId
+    principalType: 'ServicePrincipal'
   }
 }
 

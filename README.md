@@ -26,15 +26,11 @@ The intended scope of this project will include:
 
 The project's `setup` directory contains a simple script & IaC (Infra-as-Code) to bootstrap the demo into your Azure subscription.  The IaC files provisions all the resources you need to run the project, builds the initial container using [Azure Container Registry Tasks](https://learn.microsoft.com/azure/container-registry/container-registry-tasks-overview), and deploys to [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
 
-The easiest way to deploy is using the *Azure Cloud shell*, as this has all the dependencies you will need already installed, like `git` `az cli` etc.
+The easiest way to deploy is using the *Azure Cloud shell*, as this has the Azure CLI already installed & logged in.
 
 * **Step 1** : goto [Azure Cloud Shell](https://shell.azure.com), and once you have a `$` prompt,
 
-* **Step 2** : Clone the repo in your cloud shell
-   ```sh
-   git clone https://github.com/khowling/ai-shop.git
-   ```
-* **Step 3** : Run the following to deploy. 
+* **Step 2** : Run the following to deploy. 
 
     >NOTE: Change `westeurope` to the region of your choice
    ```sh
@@ -50,12 +46,12 @@ The easiest way to deploy is using the *Azure Cloud shell*, as this has all the 
    az group create -n $rgName -l $location
 
    # Deploy
-   az deployment group create -g $rgName --template-file ./setup/azure/infra/main.bicep --parameters uniqueName=${uniqueName} deployApp=true
+   az deployment group create -g $rgName --template-uri https://github.com/khowling/ai-shop/releases/download/0.0.3/main.json --parameters uniqueName=${uniqueName} repoUrl=https://github.com/khowling/ai-shop.git
    ```
 
    You should see a `/ Running ..` prompt, that, if all goes well will last for about 5minutes to complete successfully, and return a large json output.
 
-* **Step** 4 : Open the app in your browser!  
+* **Step** 3 : Open the app in your browser!  
    * Open `portal.azure.com`, and you should see a new resource group called **`aishop-xxxxx`** containing:
 
       ![Resources](./docs/azresources.png)
@@ -67,11 +63,11 @@ The easiest way to deploy is using the *Azure Cloud shell*, as this has all the 
 
 ## To run the project locally on your laptop (If you want to change/contribute)
 
-To run this project as a developer, you will need a Linux environment with access to a command shell with `nodejs`. If using Mac, this should be no problem, if using a Windows laptop, use the default Ubuntu distribution on the amazing `WSL`:
+To run this project as a developer, you will need a Linux environment with access to a command shell with [Bun](https://bun.sh/). If using Mac, this should be no problem, if using a Windows laptop, use the default Ubuntu distribution on the amazing [WSL 2](https://learn.microsoft.com/en-us/windows/wsl/about):
 
  * Follow steps [here](https://learn.microsoft.com/en-us/windows/wsl/install) to install Ubuntu on WSL
  * Then [here](https://code.visualstudio.com/) for Visual Studio Code, then the VSCode extension for WSL [here](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)
- * Then steps 1-3 [here](https://github.com/nodesource/distributions?tab=readme-ov-file#installation-instructions) will install ndoejs 
+ * Then  [here](https://bun.sh/docs/installation) to install Bun 
 
 ### Dependencies
 
@@ -87,7 +83,7 @@ Ensure you have the Azure [`az cli`](https://learn.microsoft.com/cli/azure/insta
 
 Now, assuming you have cloned the repo locally, and have changed directory to the repo folder, just execute the following commands set everything up and launch the app: 
 
- > NOTE: If you have already followed the 4 steps to deploy the app to Azure at the top of this README, and would like to re-use the same dependencies when you are running locally (recommended),  ensure you specify the same region and set the same `uniqueName` as the  5 digit unique string that was generated during the initial deployment, otherwise dont set it & it will be automatically generated for you.
+ > NOTE: If you have already followed the 3 steps to deploy the app to Azure at the top of this README, and would like to re-use the same dependencies when you are running locally (recommended),  ensure you specify the same region and set the same `uniqueName` as the  5 digit unique string that was generated during the initial deployment, otherwise dont set it & it will be automatically generated for you.
  > ```sh
  > uniqueName="xxxxx"
  > ``` 
@@ -101,12 +97,11 @@ bash setup/azure/az.dependencies.sh $location $uniqueName >app/shop/.env
 
 # Build & run the app
 cd app/shop
-npm i
-npx tsc
-npm start
+bun install
+npm run dev
 ```
 
-To run & debug the app in VSCode, launch  `VSCode`, and using the `WSL Remote` extension, open the WLS folder where the project is cloned, and run the server as shown in the image below:
+To run & debug the app in VSCode, launch  `VSCode`, and using the `WSL Remote` extension, open the WLS folder where the project is cloned, and run `Launch Bun` like in the image below:
 
 
 ![VSCode Debug](./docs/vscodedebug.png)
@@ -121,7 +116,7 @@ Use this command to load in a new configuration, or update the existing config. 
 
 ```
 # Run the script to populate the database and storage with the demo catalog
-npx tsx -r dotenv/config setup/init_config.ts setup/food.json
+bun src/init_config.ts setup/food.json
 ```
 
 ### To Build and Deploy a new revision of the app ** *** UNDER CONSTRUCTION *** **
@@ -131,8 +126,9 @@ Build the application container from your locally cloned source code, and push t
 ```
 # Ensure you are in the root directory of this project, and run
 (source app/shop/.env && 
-   az acr build -r $AISHOP_ACR_NAME -t aishop/shop:localdev01  app/shop &&
-   az containerapp revision copy -n $AISHOP_ACA_NAME -g AISHOP_RG_NAME --image 
+   tag=$(date +%s)
+   az acr build -r $AISHOP_ACR_NAME -t aishop/shop:$tag  app/shop &&
+   az containerapp revision copy -n $AISHOP_ACA_NAME -g $AISHOP_RG_NAME --image $AISHOP_ACR_NAME.azurecr.io/aishop/shop:$tag
 )
 ```
 
@@ -174,14 +170,10 @@ mongosh --eval 'rs.initiate({ _id: "rs0", members: [ { _id: 0, host : "localhost
 
 instructions here https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite?tabs=visual-studio-code%2Cblob-storage
 
-**WIP**  This gets complex, with needing https and generate certs :( :(  not a great DX
-
 
 
 #### Initialise the database and images
 
-
-NODE_TLS_REJECT_UNAUTHORIZED=0  node setup/init_config.js
 
 
 
