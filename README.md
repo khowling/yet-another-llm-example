@@ -2,15 +2,16 @@
 
 # Retail Store with AI
 
-This project is intended to be a north-star to design, build and deploy webapps combining the power of both regular programming logic and GPU based LLMs, giving the user an enhanced natural, feed-based UX that is instantly familiar, allowing users to interact with all the services of your business intuitively.
+Example repo demonstrating how to build modern cloud-agnostic applications, incorporating AI with traditional web technologies, incorporating clear, concise instructions on how to run locally, deploy to cloud, and contribute.
 
 The principles this repo upholds are:
 
- :heavy_check_mark:  Targeting cloud agnostic dependencies where practical, open-source, open-protocols  
- :heavy_check_mark:  Easily run the whole app on a dev laptop with local dependencies where possible (ex. OpenAI)
- :heavy_check_mark:  Independent and loosely coupled services, with boundaries based on team & data  
- :heavy_check_mark:  Performance, Security, Reliability and Cost are 1st class considerations  
+ :heavy_check_mark:  Cloud agnostic where practical, open-source, open-protocols  
+ :heavy_check_mark:  Run the app fully locally, gracefully handling and missing dependencies (ie. OpenAI)  
+ :heavy_check_mark:  Independent and loosely coupled services, with boundaries based on data and functional areas  
+ :heavy_check_mark:  Performance, Security, Reliability and Cost 1st class considerations  
  :heavy_check_mark:  Automated testing & deployments, for PR confidence & blue-green workflows  
+
 
 ![App](./docs/app.jpg)
 
@@ -22,11 +23,11 @@ The intended scope of this project will include:
 
 
 
-## To quicky run the app in your Azure Subscription
+## To quickly run the app in your Azure Subscription
 
-The project's `setup` directory contains a simple script & IaC (Infra-as-Code) to bootstrap the demo into your Azure subscription.  The IaC files provisions all the resources you need to run the project, builds the initial container using [Azure Container Registry Tasks](https://learn.microsoft.com/azure/container-registry/container-registry-tasks-overview), and deploys to [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
+The project's `setup` directory contains IaC (Infra-as-Code) to quickly bootstrap the demo into your Azure subscription.  The IaC files provisions all the resources you need to run the project & builds the initial container using [Azure Container Registry Tasks](https://learn.microsoft.com/azure/container-registry/container-registry-tasks-overview), deploying to [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
 
-The easiest way to deploy is using the *Azure Cloud shell*, as this has the Azure CLI already installed & logged in.
+The easiest way to deploy is using the *Azure Cloud shell*, as this has the Azure CLI already installed & logged in.  If you already have the az cli installed locally, just run on your local Linux shell:
 
 * **Step 1** : goto [Azure Cloud Shell](https://shell.azure.com), and once you have a `$` prompt,
 
