@@ -34,9 +34,6 @@ The easiest way to deploy is using the *Azure Cloud shell*, as this has the Azur
 
     >NOTE: Change `westeurope` to the region of your choice
    ```sh
-   # Change to project directory
-   cd ai-shop
-
    # Set region and a unique name for the deployment
    location="westeurope"
    uniqueName=$(printf '%05x' $RANDOM)
@@ -83,7 +80,7 @@ Ensure you have the Azure [`az cli`](https://learn.microsoft.com/cli/azure/insta
 
 Now, assuming you have cloned the repo locally, and have changed directory to the repo folder, just execute the following commands set everything up and launch the app: 
 
- > NOTE: If you have already followed the 3 steps to deploy the app to Azure at the top of this README, and would like to re-use the same dependencies when you are running locally (recommended),  ensure you specify the same region and set the same `uniqueName` as the  5 digit unique string that was generated during the initial deployment, otherwise dont set it & it will be automatically generated for you.
+ > NOTE: If you have already followed the 3 steps to deploy the app to Azure at the top of this README, and would like to re-use the same dependencies when you are running locally (recommended),  ensure you specify the same region and set the same `uniqueName` as the  5 digit unique string that was generated during the initial deployment, otherwise it will automatically generate a new uniqueName for you & create a new set of resources.
  > ```sh
  > uniqueName="xxxxx"
  > ``` 
