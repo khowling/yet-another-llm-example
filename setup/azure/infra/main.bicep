@@ -152,6 +152,10 @@ module containerapps 'containerapps.bicep' = {
         value: blobImageContainerName
       }
       {
+        name: 'PORT'
+        value: '80'
+      }
+      {
         // Required for the @azure/identity DefaultAzureCredential
         // See https://github.com/microsoft/azure-container-apps/issues/325#issuecomment-1265380377
         name: 'AZURE_CLIENT_ID'
@@ -161,7 +165,7 @@ module containerapps 'containerapps.bicep' = {
   }
 }
 
-output cosmosConnectionURL string = cosmosMongo42.outputs.cosmosConnectionURL
+output cosmosAccountName string = cosmosMongo42.outputs.cosmosAccountName
 output storageAccountName string = storage.outputs.storageAccountName
 output openAIEndpoint string = openai.outputs.openAIEndpoint
 output openAIModel string = openai.outputs.openAIModel

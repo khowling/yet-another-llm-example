@@ -126,8 +126,9 @@ Build the application container from your locally cloned source code, and push t
 ```
 # Ensure you are in the root directory of this project, and run
 (source app/shop/.env && 
-   az acr build -r $AISHOP_ACR_NAME -t aishop/shop:localdev01  app/shop &&
-   az containerapp revision copy -n $AISHOP_ACA_NAME -g $AISHOP_RG_NAME --image $AISHOP_ACR_NAME.azurecr.io/aishop/shop:localdev01
+   tag=$(date +%s)
+   az acr build -r $AISHOP_ACR_NAME -t aishop/shop:$tag  app/shop &&
+   az containerapp revision copy -n $AISHOP_ACA_NAME -g $AISHOP_RG_NAME --image $AISHOP_ACR_NAME.azurecr.io/aishop/shop:$tag
 )
 ```
 

@@ -72,14 +72,14 @@ const app = new Elysia()
     .use(html())
     .get('/load-catalogue', ({ query: {f}, cookie: { session }}) => {
         session.remove()
-        return <TextStream sseUrl={`/load-catalogue-sse${f? `?f=${f}` : ''}`} runEvent='running' completeEvent='done'/>
+        return <TextStream sseUrl={`/load-catalogue-sse?f=${f}`} runEvent='running' completeEvent='done'/>
     }, {
         query: t.Object({
-            f: t.Optional(t.String())
+            f: t.String({default: 'setup/food.json'})
         })
     })
     .get('/load-catalogue-sse', async ({query: {f}, store}) => new Stream(async (stream) => {
-        var filename = f || 'setup/food.json'
+
         var messages = ''
         var log = (msg:string) => { messages += <div>{msg}</div>; stream.send(messages)}
 
@@ -89,8 +89,8 @@ const app = new Elysia()
         store.initial_system_message = ''
         
         try {
-            stream.send (`Calling initCatalog with [${filename}]...`)
-            let tenant = await initCatalog(filename, log) as TenantDefinition
+            log (`Calling initCatalog with [${f}]...`)
+            let tenant = await initCatalog(f, log) as TenantDefinition
             if (!tenant) throw new Error('failed to create tenant')
              
             stream.event = 'done'
@@ -113,9 +113,9 @@ const app = new Elysia()
             stream.close()
         }
     }, { event: 'running' }), {
-        query: t.Optional(t.Object({
+        query: t.Object({
             f: t.String()
-        }))
+        })
     })
     .get('/reset', ({set, store, cookie: { session }}) => {
         session.remove()
