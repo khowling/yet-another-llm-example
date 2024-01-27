@@ -7,7 +7,7 @@ Example repo demonstrating how to build modern cloud-agnostic applications, inco
 The principles this repo upholds are:
 
  :heavy_check_mark:  Cloud agnostic where practical, open-source, open-protocols  
- :heavy_check_mark:  Run the app fully locally, gracefully handling and missing dependencies (ie. OpenAI)  
+ :heavy_check_mark:  Run the app fully locally (without Docker), gracefully handling and missing dependencies (ie. OpenAI)  
  :heavy_check_mark:  Independent and loosely coupled services, with boundaries based on data and functional areas  
  :heavy_check_mark:  Performance, Security, Reliability and Cost 1st class considerations  
  :heavy_check_mark:  Automated testing & deployments, for PR confidence & blue-green workflows  
@@ -69,9 +69,8 @@ To run this project as a developer, you will need a Linux environment with acces
 
 ### Dependencies
 
-Now, the application needs a `mongo database` for our business objects and transactions, a `blob storage` for documents and images and a `few OpenAI services` for the chat experiance.  You can either run these in the cloud (recommended), or run them locally using local emulators (except for the AI dependencies of course). Follow `Option1 : Run app locally with Dependencies in Cloud`, or, if you want to run locally, follow `Option 2 : Install dependencies locally`
+To run the app, you need a `mongo database` for our business objects, a `blob storage` account for documents and images, and a `few OpenAI services` for the chat experience.  You can run these in the cloud, or run them locally using mongo & local storage emulator `azurite` (cant run the AI dependencies locally of course). Follow `Option1 : Run app locally with Dependencies in Cloud`, or,  `Option 2 : Install dependencies locally`
 
-> NOTE: If you have an Azure account already or your not familiar with installing packages in Linux (it gets involved), is probably easier to run the dependencies in your Azure subscription
 
 ### Option1 : Run app locally with Dependencies in Cloud (Azure)
 
@@ -81,7 +80,7 @@ Ensure you have the Azure [`az cli`](https://learn.microsoft.com/cli/azure/insta
 
 Now, assuming you have cloned the repo locally, and have changed directory to the repo folder, just execute the following commands set everything up and launch the app: 
 
- > NOTE: If you have already followed the 3 steps to deploy the app to Azure at the top of this README, and would like to re-use the same dependencies when you are running locally (recommended),  ensure you specify the same region and set the same `uniqueName` as the  5 digit unique string that was generated during the initial deployment, otherwise it will automatically generate a new uniqueName for you & create a new set of resources.
+ > NOTE: If you have already followed the 3 steps to deploy the app to Azure at the top of this README, and would like to re-use the same dependencies when you are running locally (recommended),  ensure you specify the same region and set the `uniqueName` to the same 5 digit unique string that was generated during the initial deployment, otherwise it will automatically generate a new uniqueName for you & create a new set of resources.
  > ```sh
  > uniqueName="xxxxx"
  > ``` 
@@ -117,12 +116,14 @@ Use this command to load in a new configuration, or update the existing config. 
 bun src/init_config.ts setup/food.json
 ```
 
-### To Build and Deploy a new revision of the app ** *** UNDER CONSTRUCTION *** **
+### To Build and Deploy a new revision of the app
 
 
-Build the application container from your locally cloned source code, and push to your Azure Container Registry, all in one step using [Azure Container Registry Tasks](https://learn.microsoft.com/azure/container-registry/container-registry-tasks-overview)
+Build the application container from your locally cloned source code, and push to your Azure Container Registry, all in one step using [Azure Container Registry Tasks](https://learn.microsoft.com/azure/container-registry/container-registry-tasks-overview).
+
+Ensure you are in the root directory of the project, and run:
+
 ```
-# Ensure you are in the root directory of this project, and run
 (source app/shop/.env && 
    tag=$(date +%s)
    az acr build -r $AISHOP_ACR_NAME -t aishop/shop:$tag  app/shop &&
@@ -130,15 +131,11 @@ Build the application container from your locally cloned source code, and push t
 )
 ```
 
-Now, Create a new [revision](https://learn.microsoft.com/azure/container-apps/revisions) of your app in Azure Container Apps
-```
-
-```
 
 **Any Issues, raise an Issue**
 
 
-### Option 2 : Install depednecies locally - * UNDER CONSTRUCTION *
+### Option 2 : Install dependencies locally - * UNDER CONSTRUCTION *
 
  of you want to run locally, follow 'Setup Dependencies Local,  for we will also need `mongodb` to store our data, and `azurite` blob storage emulator to store our images and documents.
 
@@ -167,10 +164,6 @@ mongosh --eval 'rs.initiate({ _id: "rs0", members: [ { _id: 0, host : "localhost
 #### Install azurite
 
 instructions here https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite?tabs=visual-studio-code%2Cblob-storage
-
-
-
-#### Initialise the database and images
 
 
 
