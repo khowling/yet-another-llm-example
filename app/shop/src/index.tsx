@@ -6,13 +6,12 @@ import { staticPlugin } from '@elysiajs/static'
 import { MongoClient, ObjectId } from 'mongodb'
 import { OpenAIClient, type ChatRequestMessage } from '@azure/openai'
 import { DefaultAzureCredential,  } from '@azure/identity';
-import { ProductOrCategory, TenantDefinition, containerClient, initCatalog } from './init_config'
+import { type ProductOrCategory, type TenantDefinition, type Images, containerClient, initCatalog } from './init_config'
 import Index, { HTMLPage } from './components/page'
 import Products from './components/products'
-import Help from "./components/help";
-import TextResponse from "./components/textResponse";
+import TxtResponse from "./components/response";
 import Cart from "./components/cart";
-import Llm from "./components/llm";
+//import Llm from "./components/llm";
 import TextStream from "./components/textStream";
 import Command from "./components/command";
 
@@ -39,9 +38,6 @@ const defCredential = new DefaultAzureCredential()
 const aiclient = new OpenAIClient(process.env.AISHOP_OPENAI_ENDPOINT as string, defCredential);
 
 
-const imageBaseUrl = '/file' // process.env.AISHOP_STORAGE_ACCOUNT ? `https://${process.env.AISHOP_STORAGE_ACCOUNT}.blob.core.windows.net/${process.env.AISHOP_IMAGE_CONTAINER}` : `https://127.0.0.1:10000/devstoreaccount1/${process.env.AISHOP_IMAGE_CONTAINER}`
-
- 
 export const getDb = async () => {
     // Connect MongoDB
   await client.connect();
@@ -58,10 +54,18 @@ const explore = async (session : Cookie<any>, partition_key: string, type: 'Cate
         $sessionid: session.value, 
         $date: Date.now(), 
         $role: "user", 
-        $content: "Now, I'm looking at the products " + category_or_products.map(p => `"${p.heading}"`).join(' and ')
+        $content: "Your customer is now looking at the products " + category_or_products.map(p => `"${p.heading}"`).join(' and ')
     })
    
     return <Products categories={category_or_products} imageBaseUrl={imageBaseUrl}/>
+}
+
+const imageBaseUrl = '/file' // process.env.AISHOP_STORAGE_ACCOUNT ? `https://${process.env.AISHOP_STORAGE_ACCOUNT}.blob.core.windows.net/${process.env.AISHOP_IMAGE_CONTAINER}` : `https://127.0.0.1:10000/devstoreaccount1/${process.env.AISHOP_IMAGE_CONTAINER}`
+function getImageSrc(image: Images)    {
+    if (image.pathname) { // local file
+        return `${imageBaseUrl}/${image.pathname}`
+    }
+    return image.url
 }
 
 const app = new Elysia()
@@ -144,11 +148,14 @@ const app = new Elysia()
 
                 const cat_prods = await db.collection('products').find({ partition_key: store.partition_key }).toArray() as unknown as Array<ProductOrCategory>
                 store.initial_system_message = 
-                    tenant.aiSystemMessage + '. ' +
-                    cat_prods.filter(c => c.type === 'Category').map (c => `In the Category name "${c.heading}", with ID ${c._id}, we sell ${cat_prods.filter(p => p.type === "Product" && c._id.equals(p.category_id) ).map(p => p.heading).join(' and ')}`).join('. ') + '. ' +
-                    'Instead of using the Category name or ID in your output directly, use this HTML format instead' + <Command command='/explore'subcommand="EXAMPLECATEGORY" args={new ObjectId(123)}/> + ', replacing EXAMPLECATEGORY with the actual category name and "' + new ObjectId(123) + '" with its ID.'
+                    `Your name is ${tenant.assistantName}. ` +
+                    tenant.assistantGrounding + '. ' +
+                    'Your only here to help your customers select between these items: ' + cat_prods.filter(c => c.type === 'Category').map (c => `In the Category name "${c.heading}" (ID "${c._id}"), we have ${cat_prods.filter(p => p.type === "Product" && c._id.equals(p.category_id) ).map(p => `"${p.heading}"`).join(', ')}`).join('. ') + '. ' +
+                    'Instead of using the Category name or ID directly in your response, use this HTML format instead: ' + <Command command='/explore'subcommand="EXAMPLECATEGORY" args={new ObjectId(123)}/> + ', replacing EXAMPLECATEGORY with the actual category name and "' + new ObjectId(123) + '" with its ID.'
 
             }
+
+            console.log (`/  initial_system_message=${store.initial_system_message}`)
 
             if (!session.value) {
                 console.log (`/  creating new session`)
@@ -162,14 +169,20 @@ const app = new Elysia()
             return JSON.stringify(error)
         }
     })
-    .get('/help', () =>
-        <Help full={false} imageBaseUrl={imageBaseUrl}/>
+    .get('/help', ({store: {tenant}}) =>
+        <TxtResponse assistantMessage={<div>Hi, Im {tenant.assistantName}, your assistant, type <Command command='/explore'/> or <Command command='/cart'/>  at any time. or... just chat to me, I can be very helpful</div>} assistantImageSrc={getImageSrc(tenant.assistantImage)}/>
     )
     .get('/explore', async ({cookie: { session }, store: { partition_key}}) => 
         await explore(session, partition_key, 'Category')
     )
     .get('/explore/:category', async ({ cookie: { session }, store: { partition_key}, params: { category } }) =>
         await explore(session, partition_key, 'Product', category)
+    )
+    .get('/details/:pid', ({ store: { tenant}, params: { pid } }) =>
+       <TxtResponse assistantMessage={<div>Will someone hurry up and implement this feature please!</div>} assistantImageSrc={getImageSrc(tenant.assistantImage)}/>
+    )
+    .get('/checkout', ({ store: { tenant}}) =>
+       <TxtResponse assistantMessage={<div>Will someone hurry up and implement this feature please!</div>} assistantImageSrc={getImageSrc(tenant.assistantImage)}/>
     )
     .get('/file/*', async ({ set, params }) => {
         const filepath = params['*'];
@@ -182,15 +195,13 @@ const app = new Elysia()
             return e.message
         } 
     })
-    .post('/add/:productid', async ({ set, store: { partition_key}, params: { productid }, cookie: { session } }) => {
+    .post('/add/:productid', async ({ set, store: { partition_key, tenant }, params: { productid }, cookie: { session } }) => {
         try {
           const db = await getDb();
           const product = await db.collection('products').findOne({ partition_key, _id: new ObjectId(productid)})
-      
-          //sess.cart = [{ product, quantity: 1}].concat(sess.cart || [])
           newCartItem.run({$sessionid: session.value, $productid: productid, $heading: product?.heading, $qty: 1})
-          //sess.history = [...(sess.history || []), { role: 'user', content: `I added ${product?.heading}  to my cart`}]
-          return <TextResponse answer={`${product?.heading} added to your cart`}/>
+          return <TxtResponse assistantMessage={<div>{product?.heading} added to your cart, click <Command command='/cart'/> to view</div>} assistantImageSrc={getImageSrc(tenant.assistantImage)}/>
+          
         } catch (error: any) {
           set.status = 500
           return error
@@ -205,17 +216,23 @@ const app = new Elysia()
             return error
         }
     })
-    .post('/api/chat/request',({body, cookie: { session }}) => {
+    .post('/api/chat/request',({body, store: { tenant}, cookie: { session }}) => {
     
-        const chatDateKey = Date.now()
+        const chatDateKey = Date.now(), chatid = '' + chatDateKey
         newPromptHistory.run({
             $sessionid: session.value, 
             $date: chatDateKey, 
             $role: "user", 
             $content: body.question
         })
+        const scrollWorkaround = { 'hx-on:htmx:sse-message' : `document.getElementById('messages').scrollIntoView(false)`}
+        return <TxtResponse assistantMessage={
+            <div id={`sse-response${chatid}`} hx-ext="sse" sse-connect={`/api/chat/completion/${chatid}`} sse-swap={chatid} hx-swap="innerHTML" hx-target={`find #stream${chatid}`} {...scrollWorkaround}>
+                <div sse-swap={`close${chatid}`} hx-swap="outerHTML"  hx-target={`closest #sse-response${chatid}`} {...scrollWorkaround}></div>
+                <div style="width: fit-content;" id={`stream${chatid}`}></div>
+            </div>
+        } assistantImageSrc={getImageSrc(tenant.assistantImage)}/> 
 
-        return <Llm chatid={'' + chatDateKey} question={body.question}/>
       }, {
         body: t.Object({
             question: t.String()

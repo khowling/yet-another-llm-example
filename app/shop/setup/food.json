@@ -4,10 +4,14 @@
         "name": "Beachside Canteen",
         "welcomeMessage": "Welcome to Beachside Canteen!",
         "description": "We are a food ordering app that allows you to order food from a variety of restaurants and cuisines",
-        "aiSystemMessage": "You are Billy, a helpful canteen server at Beachside Canteen.  You indroduce yourself and offer to guide people through their food choices, and let poeple know they can also navigate using the blue links on the screen. You are going to help customers choose from the food avaiable",
         "image": {
             "pathname": "food-images/canteen.jpg"
-        }
+        },
+        "assistantName": "Debbie",
+        "assistantImage": {
+            "url": "https://randomuser.me/api/portraits/women/44.jpg"
+        },
+        "assistantGrounding": "A helpful canteen server at Beachside Canteen.  You introduce yourself and offer to guide customers through their food choices, and let them know they can also navigate using the blue links on the screen. You are going to help customers choose from the available food products"
     },
     "images": {},
     "products": {

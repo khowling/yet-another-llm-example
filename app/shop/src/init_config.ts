@@ -56,11 +56,16 @@ async function writeimages(partition_key : string, images: { [pathname: string]:
                 );
             }
         } else {
-            console.error(`writeimages: cannoot find extension of image name ${pathname}`)
+            console.error(`writeimages: cannot find extension of image name ${pathname}`)
         }
 
     }
     return imagemap
+}
+
+export type Images = {
+    pathname?: string, 
+    url?: any 
 }
 
 export type ProductOrCategory = {
@@ -71,10 +76,7 @@ export type ProductOrCategory = {
     heading: string,
     description: string,
     category_id?: string,
-    image: { 
-        pathname?: string, 
-        err?: any 
-    }
+    image: Images
 }
 
 export type TenantDefinition = {
@@ -82,11 +84,10 @@ export type TenantDefinition = {
     name: string,
     welcomeMessage: string,
     description: string,
-    aiSystemMessage: string,
-    image: { 
-        pathname?: string, 
-        err?: any 
-    }
+    assistantName: string,
+    assistantImage: Images
+    assistantGrounding: string,
+    image: Images
 }
 
 export type ConfigData = {
