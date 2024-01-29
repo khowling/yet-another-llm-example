@@ -228,7 +228,7 @@ const app = new Elysia()
         const scrollWorkaround = { 'hx-on:htmx:sse-message' : `document.getElementById('messages').scrollIntoView(false)`}
         return <TxtResponse assistantMessage={
             <div id={`sse-response${chatid}`} hx-ext="sse" sse-connect={`/api/chat/completion/${chatid}`} sse-swap={chatid} hx-swap="innerHTML" hx-target={`find #stream${chatid}`} {...scrollWorkaround}>
-                <div sse-swap={`close${chatid}`} hx-swap="outerHTML"  hx-target={`closest #sse-response${chatid}`} {...scrollWorkaround}></div>
+                <div sse-swap={`close${chatid}`} hx-swap="outerHTML"  hx-target={`closest #sse-response${chatid}`}></div>
                 <div style="width: fit-content;" id={`stream${chatid}`}></div>
             </div>
         } assistantImageSrc={getImageSrc(tenant.assistantImage)}/> 
@@ -245,7 +245,7 @@ const app = new Elysia()
             if (!process.env.AISHOP_OPENAI_MODELNAME) throw new Error('AISHOP_OPENAI_MODELNAME not set')
             const prompt_history = [{role: "system", content: initial_system_message}, ...listPromptHistory.all({$sessionid: session.value})] as Array<ChatRequestMessage>
 
-            const events = await aiclient.streamChatCompletions(process.env.AISHOP_OPENAI_MODELNAME as string, prompt_history, { maxTokens: 256,  });
+            const events = await aiclient.streamChatCompletions(process.env.AISHOP_OPENAI_MODELNAME as string, prompt_history, { maxTokens: 512 });
 
             let response = '';
             let isopencode = false;
@@ -286,7 +286,8 @@ const app = new Elysia()
             })
 
             stream.event = `close${chatid}`
-            stream.send(`<div class="chat-bubble chat-bubble-info">${response}</div>`);
+            const scrollWorkaround = { 'hx-on:htmx:after-settle' : `document.getElementById('messages').scrollIntoView(false)`}
+            stream.send(<div class="chat-bubble chat-bubble-info" {...scrollWorkaround}>{response}</div>);
             stream.close()
 
         } catch (e: any) {
