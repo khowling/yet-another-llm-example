@@ -74,13 +74,13 @@ To run the app, you need a `mongo database` for our business objects, a `blob st
 
 ### Option1 : Run app locally with Dependencies in Cloud (Azure)
 
-This repo contains the necessary scripts to setup all the Azure dependencies you need to run this app. It also creates a local `.env` file will all the necessary connection details for the app to run locally, with the dependencies running in Azure.
+This repo contains the necessary bicep scripts to setup all the Azure dependencies you need to run this app locally. 
 
-Ensure you have the Azure [`az cli`](https://learn.microsoft.com/cli/azure/install-azure-cli), installed, and its logged in (`az login`) with an account that has `owner` rights on the subscription.
+Ensure you have cloned the repo locally, and you have the Azure [`az cli`](https://learn.microsoft.com/cli/azure/install-azure-cli), installed, and its logged in (`az login`) with an account that has `owner` rights on your subscription.
 
 Now, assuming you have cloned the repo locally, and have changed directory to the repo folder, just execute the following commands set everything up and launch the app: 
 
- > NOTE: If you have already followed the 3 steps to deploy the app to Azure at the top of this README, and would like to re-use the same dependencies when you are running locally (recommended),  ensure you specify the same region and set the `uniqueName` to the same 5 digit unique string that was generated during the initial deployment, otherwise it will automatically generate a new uniqueName for you & create a new set of resources.
+ > NOTE: If you have already followed the 3 steps to deploy the app to Azure at the top of this README, and would like to re-use the same dependencies when you are running locally,  ensure you specify the same region and set the `uniqueName` to the same 5 digit unique string that was generated during the initial deployment, otherwise, just leave it unset and the script will automatically generate a new uniqueName for you & create a new set of resources.
  > ```sh
  > uniqueName="xxxxx"
  > ``` 
