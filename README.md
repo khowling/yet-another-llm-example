@@ -29,25 +29,10 @@ The project's `setup` directory contains IaC (Infra-as-Code) to quickly bootstra
 
 The easiest way to deploy is using the *Azure Cloud shell*, as this has the Azure CLI already installed & logged in.  If you already have the az cli installed locally, just run on your local Linux shell:
 
-* **Step 1** : goto [Azure Cloud Shell](https://shell.azure.com), and once you have a `$` prompt,
+* **Step 1** : 
 
-* **Step 2** : Run the following to deploy. 
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fgithub.com%2Fkhowling%2Fai-shop%2Freleases%2Fdownload%2F0.0.3%2Fmain.json)
 
-    >NOTE: Change `westeurope` to the region of your choice
-   ```sh
-   # Set region and a unique name for the deployment
-   location="westeurope"
-   uniqueName=$(printf '%05x' $RANDOM)
-   rgName="aishop-${uniqueName}"
-
-   # Create resource group
-   az group create -n $rgName -l $location
-
-   # Deploy
-   az deployment group create -g $rgName --template-uri https://github.com/khowling/ai-shop/releases/download/0.0.3/main.json --parameters uniqueName=${uniqueName} repoUrl=https://github.com/khowling/ai-shop.git
-   ```
-
-   You should see a `/ Running ..` prompt, that, if all goes well will last for about 5minutes to complete successfully, and return a large json output.
 
 * **Step** 3 : Open the app in your browser!  
    * Open `portal.azure.com`, and you should see a new resource group called **`aishop-xxxxx`** containing:
