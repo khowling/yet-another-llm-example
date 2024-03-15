@@ -27,14 +27,14 @@ The intended scope of this project will include:
 
 The project's `setup` directory contains IaC (Infra-as-Code) to quickly bootstrap the demo into your Azure subscription.  The IaC files provisions all the resources you need to run the project & builds the initial container using [Azure Container Registry Tasks](https://learn.microsoft.com/azure/container-registry/container-registry-tasks-overview), deploying to [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
 
-The easiest way to deploy is using the *Azure Cloud shell*, as this has the Azure CLI already installed & logged in.  If you already have the az cli installed locally, just run on your local Linux shell:
+To run the demo in your Azure subscription:
 
 * **Step 1** : 
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fgithub.com%2Fkhowling%2Fai-shop%2Freleases%2Fdownload%2F0.0.3%2Fmain.json)
 
 
-* **Step** 3 : Open the app in your browser!  
+* **Step 2** : Open the app in your browser!  
    * Open `portal.azure.com`, and you should see a new resource group called **`aishop-xxxxx`** containing:
 
       ![Resources](./docs/azresources.png)
@@ -43,6 +43,7 @@ The easiest way to deploy is using the *Azure Cloud shell*, as this has the Azur
    * Click on the `Application Url` in the top right conner of the overview tab.  You should see your app.
 
       > NOTE: Any issues, please log a issue against this github repo, and we'll get to it asap.
+
 
 ## To run the project locally on your laptop (If you want to change/contribute)
 
