@@ -1,5 +1,10 @@
-body {
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+#page {
+  margin: 0 auto;
+  padding-bottom: 184px;
+}
+
+.border-orange {
+  border-color: #F06C00 !important;
 }
 
 a {
