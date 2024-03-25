@@ -1,0 +1,231 @@
+{
+    "tenant": {
+        "partition_key": "sainsburys",
+        "name": "Sainsbury's",
+        "welcomeMessage": "Hey Sainsbury's!",
+        "description": "I'm an AI-powered grocery bot.",
+        "image": {
+            "pathname": "sainsburys-images/heysainsbury.png"
+        },
+        "assistantName": "Debbie",
+        "assistantImage": {
+            "url": "https://randomuser.me/api/portraits/women/44.jpg"
+        },
+        "assistantGrounding": "A helpful grocery bot that suggest ingredients for Sunday Roast.  You introduce yourself and offer to guide customers through their food choices, and let them know they can also navigate using the blue links on the screen. You are going to help customers choose from the available food products"
+    },
+    "images": {},
+    "products": {
+        "Product": [
+            {
+                "_id": "5f524a71d9162b5c72877681",
+                "type": "Product",
+                "heading": "Pasta with tomatoes and spinach",
+                "position": "normal",
+                "category_id": "d1",
+                "description": "A simple and delicious meal, spaghetti with tomato sauce and lightly fried spinach.",
+                "price": 234,
+                "image": {
+                    "pathname": "food-images/dinner-pasta.jpg"
+                }
+            },
+            {
+                "_id": "5f524a71d9162b5c72877682",
+                "type": "Product",
+                "heading": "Shrimp Noodle soup",
+                "position": "normal",
+                "category_id": "d1",
+                "description": "Bowl of noodle soup with shrimp, meat, and vegetables. A flavorful and satisfying meal that you can find in many Asian cuisines",
+                "price": 234,
+                "image": {
+                    "pathname": "food-images/dinner-soup.jpg"
+                }
+            },
+            {
+                "_id": "Steak1",
+                "type": "Product",
+                "heading": "Sirloin Steak",
+                "position": "normal",
+                "category_id": "d1",
+                "description": "A juicy sirloin steak with a side of vegetables and potatoes. A classic and delicious meal.  A good source of protein, iron, zinc, and vitamin B12",
+                "price": 2445,
+                "image": {
+                    "pathname": "food-images/dinner-stake.jpg"
+                }
+            },
+            {
+                "_id": "salad1",
+                "type": "Product",
+                "heading": "Caesar Salad with Bacon and Flatbread",
+                "position": "normal",
+                "category_id": "s1",
+                "description": "A classic salad of crisp romaine lettuce tossed in a creamy Caesar dressing, topped with crunchy croutons, savory bacon bits, and freshly grated parmesan cheese",
+                "price": 2445,
+                "image": {
+                    "pathname": "food-images/snack-salad.jpg"
+                }
+            },
+            {
+                "_id": "cake1",
+                "type": "Product",
+                "heading": "Chocolate Cherry Cake with Creamy Layers",
+                "position": "normal",
+                "category_id": "s1",
+                "description": "A decadent dessert of moist chocolate sponge cake layered with smooth cream and topped with a rich chocolate sauce and chunks of cherries",
+                "price": 2445,
+                "image": {
+                    "pathname": "food-images/snack-cake.jpg"
+                }
+            },
+            {
+                "_id": "gronola1",
+                "type": "Product",
+                "heading": "Yogurt Parfait with Granola and Fruits",
+                "position": "normal",
+                "category_id": "b1",
+                "description": "A creamy yogurt parfait layered with crunchy granola and topped with a medley of fresh blueberries, red currants, and strawberries.",
+                "price": 2445,
+                "image": {
+                    "pathname": "food-images/breakfast-granola.jpg"
+                }
+            },
+            {
+                "_id": "carrots1",
+                "type": "Product",
+                "heading": "Fresh Carrots",
+                "position": "normal",
+                "category_id": "a1",
+                "description": "A stack of fluffy pancakes drizzled with sweet maple syrup and topped with a colorful assortment of fresh berries",
+                "price": 1.34,
+                "image": {
+                    "pathname": "sainsburys-images/carrots.jpg"
+                }
+            },
+            {
+                "_id": "parsnips1",
+                "type": "Product",
+                "heading": "Parsnips",
+                "position": "normal",
+                "category_id": "a1",
+                "description": "Local Brittish parsnips",
+                "price": 1.50,
+                "image": {
+                    "pathname": "sainsburys-images/parsnips.jpg"
+                }
+            },
+            {
+                "_id": "potatoes1",
+                "type": "Product",
+                "heading": "Baby Potatoes with Herbs and Butter",
+                "position": "normal",
+                "category_id": "a1",
+                "description": "Brittish baby potatoes with herbs and butter. A delicious and comforting side dish for any meal.",
+                "price": 1.20,
+                "image": {
+                    "pathname": "sainsburys-images/baby-potatoes.jpg"
+                }
+            },
+            {
+                "_id": "peas1",
+                "type": "Product",
+                "heading": "Frozen Peas",
+                "position": "normal",
+                "category_id": "a1",
+                "description": "Brittish frozen peas. A versatile and nutritious vegetable that can be used in a variety of dishes.",
+                "price": 1.00,
+                "image": {
+                    "pathname": "sainsburys-images/peas.jpg"
+                }             
+            },
+            {
+                "_id": "chicken1",
+                "type": "Product",
+                "heading": "Roast-ready Chicken",
+                "position": "normal",
+                "category_id": "a1",
+                "description": "A whole roast-ready chicken, with butter and herbs. All set up for Sunday roast.",
+                "price": 13.50,
+                "image": {
+                    "pathname": "sainsburys-images/ready-chicken.jpg"
+                }
+            },
+            {
+                "_id": "checken2",
+                "type": "Product",
+                "heading": "Whole chicken",
+                "position": "normal",
+                "category_id": "a1",
+                "description": "A whole chicken, perfect for roasting or grilling. A versatile and delicious protein source.",
+                "price": 12.50,
+                "image": {
+                    "pathname": "sainsburys-images/whole-chicken.jpg"
+                }
+            },
+            {
+                "_id": "yspuddings1",
+                "type": "Product",
+                "heading": "Frozen Yorkshire Puddings",
+                "position": "normal",
+                "category_id": "a1",
+                "description": "Brittish frozen Yorkshire puddings. A classic side dish for a traditional Sunday roast.",
+                "price": 2.50,
+                "image": {
+                    "pathname": "sainsburys-images/ys-puddings.jpg"
+                }
+            },
+            {
+                "_id": "gravy1",
+                "type": "Product",
+                "heading": "Gravy Granules",
+                "position": "normal",
+                "category_id": "a1",
+                "description": "Brittish gravy granules. A quick and easy way to make delicious gravy for your Sunday roast.",
+                "price": 1.50,
+                "image": {
+                    "pathname": "sainsburys-images/gravy.jpg"
+                }
+            }
+        ],
+        "Category": [
+            {
+                "_id": "a1",
+                "type": "Category",
+                "heading": "Sunday Roast",
+                "position": "hero",
+                "description": "Discover our featured food and drinks, from a classic English breakfast to a hearty Sunday roast",
+                "image": {
+                    "pathname": "sainsburys-images/sundayroast.jpg"
+                }
+            },
+            {
+                "_id": "b1",
+                "type": "Category",
+                "heading": "Breakfast",
+                "position": "hero",
+                "description": "Start your day with a hearty English breakfast or enjoy a continental breakfast with fresh pastries and fruits",
+                "image": {
+                    "pathname": "food-images/breakfast.jpg"
+                }
+            },
+            {
+                "_id": "s1",
+                "type": "Category",
+                "heading": "Snacks",
+                "position": "highlight",
+                "description": "Choose from a range of tasty and balanced snacks, or indulge in our home made cakes and desserts",
+                "image": {
+                    "pathname": "food-images/snack.jpg"
+                }
+            },
+            {
+                "_id": "d1",
+                "type": "Category",
+                "heading": "Lunch & Dinner",
+                "position": "highlight",
+                "description": "Explore new tastes with a diverse and adventurous dinner with our ethnic and fusion dishes",
+                "image": {
+                    "pathname": "food-images/dinner.jpg"
+                }
+            }
+        ]
+    }
+}

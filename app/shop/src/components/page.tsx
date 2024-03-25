@@ -12,6 +12,7 @@ const Header = ({tenant}: {tenant : TenantDefinition}) =>
             <a class="btn btn-ghost text-xl" hx-get="/reset">{tenant.name}</a>
         </div>
 
+
         <div class="flex-none gap-8 mr-5">
 
             <div class="dropdown dropdown-end">
@@ -58,8 +59,9 @@ const Header = ({tenant}: {tenant : TenantDefinition}) =>
                 <li><a>Logout</a></li>
             </ul>
             </div>
-        </div>
+        </div>        
     </header>
+
 
 
 export const HTMLPage = ({children}: {children?: any}) =>
@@ -76,6 +78,7 @@ export const HTMLPage = ({children}: {children?: any}) =>
     </head>
     <body>
             {children}
+
     </body>
     </html>
 
@@ -89,8 +92,7 @@ export default ({tenant, imageBaseUrl}: {tenant : TenantDefinition, imageBaseUrl
                 <div class="h-24" id="messages"></div>
                 </div>
             </div>
-
-
+            
 
             <div id="cib-action-bar" class="absolute bottom-0 flex w-full  bg-base-100 transition-opacity mr-10">
         

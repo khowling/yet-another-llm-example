@@ -3,7 +3,8 @@ body {
 }
 
 a {
-  color: #00B7FF;
+  /* color: #00B7FF; */
+  color: #F06C00;
 }
 
 #scroller * {
