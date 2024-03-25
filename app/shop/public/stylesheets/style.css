@@ -19,3 +19,8 @@ a {
 /*  overflow-anchor: auto; */
   overflow-anchor: auto;
 }
+
+.command-border {
+  background-color: #F06C00 !important;
+  border-color: #F06C00 !important;
+}
