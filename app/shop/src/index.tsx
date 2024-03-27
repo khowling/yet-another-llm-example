@@ -15,6 +15,7 @@ import Cart from "./components/cart";
 import TextStream from "./components/textStream";
 import Command from "./components/command";
 
+import Sproducts from "./components/Sproducts";
 
 // Going to use Buns embedded DB for session info, just for testing, for production, use mongo/cosmos!
 const memorydb = new Database(":memory:");
@@ -59,6 +60,17 @@ const explore = async (session : Cookie<any>, partition_key: string, type: 'Cate
    
     return <Products categories={category_or_products} imageBaseUrl={imageBaseUrl}/>
 }
+
+const roastExplore = async (partition_key: string) => {
+    const db = await getDb();
+    console.log (`/explore got partition_key ${partition_key}`)
+    const products = await db.collection('products').find({partition_key, type: 'Product'}).toArray() as unknown as Array<ProductOrCategory>
+    const categories = await db.collection('products').find({partition_key, type: 'Category'}).toArray() as unknown as Array<ProductOrCategory>
+    // wait for 500mS
+    await new Promise(r => setTimeout(r, 500))
+    return <Sproducts recipes={categories} rheading="Great, try one of our recipes" products={products} imageBaseUrl={imageBaseUrl}/>
+}
+
 
 const imageBaseUrl = '/file' // process.env.AISHOP_STORAGE_ACCOUNT ? `https://${process.env.AISHOP_STORAGE_ACCOUNT}.blob.core.windows.net/${process.env.AISHOP_IMAGE_CONTAINER}` : `https://127.0.0.1:10000/devstoreaccount1/${process.env.AISHOP_IMAGE_CONTAINER}`
 function getImageSrc(image: Images)    {
@@ -169,14 +181,43 @@ const app = new Elysia()
             return JSON.stringify(error)
         }
     })
+    .get('/suggestions', ({store: {tenant}}) =>
+        <TxtResponse assistantMessage={
+        <div>
+        <h1>Welcome to Hey Sainsbury's</h1>
+        <div>Your AI assistant here to help you find whatever you are looking for.  Tell me what you are looking for below, on start with one of these examples:
+        <div class="flex flex-row flex-wrap gap-5 my-5">
+        
+            <div class="card bg-base-100 shadow-xl basis-70 cursor-pointer"  hx-get="/explore/roast" hx-swap="beforebegin show:bottom" hx-target="#messages">
+                <div class="card-body">
+                    <h2 class="card-title text-[#E55000]">Create a Sunday Roast</h2>
+                    <p class="text-sm">Help me to pre-prepare for the Inlaws</p>
+                </div>
+            </div>
+
+            <div  class="card bg-base-100 shadow-xl basis-70">
+                <div class="card-body">
+                    <h2 class="card-title text-[#E55000]">Lunch box fillers</h2>
+                    <p class="text-sm">One thing less to think about in the morning</p>
+                </div>
+            </div>
+
+    </div>
+        </div>
+        </div>
+        } assistantImageSrc={'https://randomuser.me/api/portraits/lego/7.jpg'}/>
+    )
     .get('/help', ({store: {tenant}}) =>
-        <TxtResponse assistantMessage={<div>Hi, Im {tenant.assistantName}, your assistant, type <Command command='/explore'/> or <Command command='/cart'/>  at any time. or... just chat to me, I can be very helpful</div>} assistantImageSrc={getImageSrc(tenant.assistantImage)}/>
+    <TxtResponse assistantMessage={<div>Hi, Im {tenant.assistantName}, your assistant, type <Command command='/explore'/> or <Command command='/cart'/>  at any time. or... just chat to me, I can be very helpful</div>} assistantImageSrc={getImageSrc(tenant.assistantImage)}/>
     )
     .get('/explore', async ({cookie: { session }, store: { partition_key}}) => 
         await explore(session, partition_key, 'Category')
     )
     .get('/explore/:category', async ({ cookie: { session }, store: { partition_key}, params: { category } }) =>
-        await explore(session, partition_key, 'Product', category)
+        category === 'roast' ? 
+            await roastExplore(partition_key) 
+            :
+            await explore(session, partition_key, 'Product', category)
     )
     .get('/details/:pid', ({ store: { tenant}, params: { pid } }) =>
        <TxtResponse assistantMessage={<div>Will someone hurry up and implement this feature please!</div>} assistantImageSrc={getImageSrc(tenant.assistantImage)}/>
@@ -199,7 +240,14 @@ const app = new Elysia()
         try {
           const db = await getDb();
           const product = await db.collection('products').findOne({ partition_key, _id: new ObjectId(productid)})
-          newCartItem.run({$sessionid: session.value, $productid: productid, $heading: product?.heading, $qty: 1})
+          if (product?.type === 'Category') {
+            const products = await db.collection('products').find({partition_key, type: 'Product', category_id: new ObjectId(product._id)}).toArray() as unknown as Array<ProductOrCategory>
+            for (const p of products) {
+                newCartItem.run({$sessionid: session.value, $productid: p._id.toHexString(), $heading: p?.heading, $qty: 1})
+            }
+          } else {
+            newCartItem.run({$sessionid: session.value, $productid: productid, $heading: product?.heading, $qty: 1})
+          }
           return <TxtResponse assistantMessage={<div>{product?.heading} added to your cart, click <Command command='/cart'/> to view</div>} assistantImageSrc={getImageSrc(tenant.assistantImage)}/>
           
         } catch (error: any) {
@@ -216,7 +264,7 @@ const app = new Elysia()
             return error
         }
     })
-    .post('/api/chat/request',({body, store: { tenant}, cookie: { session }}) => {
+    .post('/api/chat/request', async ({body, store: { partition_key, tenant}, cookie: { session }}) => {
     
         const chatDateKey = Date.now(), chatid = '' + chatDateKey
         newPromptHistory.run({
@@ -225,14 +273,22 @@ const app = new Elysia()
             $role: "user", 
             $content: body.question
         })
-        const scrollWorkaround = { 'hx-on:htmx:sse-message' : `document.getElementById('messages').scrollIntoView(false)`}
-        return <TxtResponse assistantMessage={
-            <div id={`sse-response${chatid}`} hx-ext="sse" sse-connect={`/api/chat/completion/${chatid}`} sse-swap={chatid} hx-swap="innerHTML" hx-target={`find #stream${chatid}`} {...scrollWorkaround}>
-                <div sse-swap={`close${chatid}`} hx-swap="outerHTML"  hx-target={`closest #sse-response${chatid}`}></div>
-                <div style="width: fit-content;" id={`stream${chatid}`}></div>
-            </div>
-        } assistantImageSrc={getImageSrc(tenant.assistantImage)}/> 
 
+        // Call Prompt Flow, response
+        
+        if (body.question?.includes('roast')) {
+            // customer specific
+            return roastExplore(partition_key)
+        } else {
+            const scrollWorkaround = { 'hx-on:htmx:sse-message' : `document.getElementById('messages').scrollIntoView(false)`}
+            return <TxtResponse assistantMessage={
+                <div id={`sse-response${chatid}`} hx-ext="sse" sse-connect={`/api/chat/completion/${chatid}`} sse-swap={chatid} hx-swap="innerHTML" hx-target={`find #stream${chatid}`} {...scrollWorkaround}>
+                    <div sse-swap={`close${chatid}`} hx-swap="outerHTML"  hx-target={`closest #sse-response${chatid}`}></div>
+                    <div style="width: fit-content;" id={`stream${chatid}`}></div>
+                </div>
+            } assistantImageSrc={getImageSrc(tenant.assistantImage)}/> 
+        }   
+        
       }, {
         body: t.Object({
             question: t.String()
@@ -287,7 +343,7 @@ const app = new Elysia()
 
             stream.event = `close${chatid}`
             const scrollWorkaround = { 'hx-on:htmx:after-settle' : `document.getElementById('messages').scrollIntoView(false)`}
-            stream.send(<div class="chat-bubble chat-bubble-info" {...scrollWorkaround}>{response}</div>);
+            stream.send(<div class="chat-bubble bg-[#FEF5F0] text-black" {...scrollWorkaround}>{response}</div>);
             stream.close()
 
         } catch (e: any) {

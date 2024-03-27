@@ -74,12 +74,16 @@ export const HTMLPage = ({children}: {children?: any}) =>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link href="public/stylesheets/style.css" rel="stylesheet" type="text/css" />
         <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.20/dist/full.min.css" rel="stylesheet" type="text/css" />
+
+        <link rel="stylesheet" href="https://cdn.sainsburys.co.uk/css/style/latest/main.css"/>
+        <link rel="stylesheet" href="https://cdn.sainsburys.co.uk/css/fable/3.18.0/carousel/main.css"/>
+
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
         <script src="https://unpkg.com/htmx.org/dist/ext/sse.js"></script>
         <script src="js/tailwind.js"></script>
     </head>
-    <body>
+    <body class="ds-theme--argos">
             {children}
     </body>
     </html>
@@ -87,10 +91,11 @@ export const HTMLPage = ({children}: {children?: any}) =>
 
 export default ({tenant, imageBaseUrl}: {tenant : TenantDefinition, imageBaseUrl : string}) => 
     <HTMLPage>
-        <div class="absolute h-full w-full flex z-0">
-            <div id="chatContainer" class="flex  relative h-full w-full overflow-y-scroll flex-col flex-1 z-0"  >
-                <div id="scroller" class="pt-28 -z-1 sm:px-16" hx-trigger="load" hx-get="/explore" hx-swap="beforebegin show:bottom" hx-target="#messages">
-                <Welcome tenant={tenant} imageBaseUrl={imageBaseUrl}/>
+        <div class="absolute h-full w-full flex z-0 ">
+            <div id="chatContainer" class="flex  relative h-full w-full overflow-y-scroll flex-col flex-1 z-0 bg-slate-100"  >
+                <div id="scroller" class="pt-28 -z-1 sm:px-16" hx-trigger="load" hx-get="/suggestions" hx-swap="beforebegin show:bottom" hx-target="#messages">
+                    
+
                 <div class="h-24" id="messages"></div>
                 </div>
             </div>
