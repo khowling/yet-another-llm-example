@@ -2,10 +2,10 @@
     "tenant": {
         "partition_key": "sainsburys",
         "name": "Sainsbury's",
-        "welcomeMessage": "Hey Sainsbury's!",
-        "description": "I'm an AI-powered grocery bot.",
+        "welcomeMessage": "",
+        "description": "",
         "image": {
-            "pathname": "sainsburys-images/heysainsbury.png"
+            "pathname": "sainsburys-images/promo.png"
         },
         "assistantName": "Debbie",
         "assistantImage": {

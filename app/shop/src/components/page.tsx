@@ -119,9 +119,9 @@ export default ({tenant, imageBaseUrl}: {tenant : TenantDefinition, imageBaseUrl
                         
 
                             <div id="cmd-dropdown" class="invisible transition transition-opacity duration-300 absolute left-8 bottom-16 z-10 mt-2 w-4/5 p-2 origin-bottom-left rounded-md bg-base-100 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
-                                <div class="py-1" role="none">
+                                <div class="py-1 command-border text-white" role="none">
                                 <div class="ml-4 my-2"><Command command='/help'/><b>to see what you can do</b></div>
-                                <div class="ml-4 my-2"><Command command='/cart'/><b>to open your cart</b></div>
+                                <div class="ml-4 my-2 "><Command command='/cart'/><b>to open your cart</b></div>
                                 <div class="ml-4  my-2"><Command command='/recommend'/><b>whats good today?</b></div>
                                 <div class="ml-4  my-2"><Command command='/allergies'/><b>let us help</b></div>
                                 </div>
