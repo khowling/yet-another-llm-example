@@ -25,6 +25,8 @@ The intended scope of this project will include:
 
 ## To quickly run the app in your Azure Subscription
 
+![Deploy to Azure](https://aka.ms/deploytoazurebutton)
+
 The project's `setup` directory contains IaC (Infra-as-Code) to quickly bootstrap the demo into your Azure subscription.  The IaC files provisions all the resources you need to run the project & builds the initial container using [Azure Container Registry Tasks](https://learn.microsoft.com/azure/container-registry/container-registry-tasks-overview), deploying to [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
 
 The easiest way to deploy is using the *Azure Cloud shell*, as this has the Azure CLI already installed & logged in.  If you already have the az cli installed locally, just run on your local Linux shell:
