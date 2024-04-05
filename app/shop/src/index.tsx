@@ -15,7 +15,7 @@ import Cart from "./components/cart";
 import TextStream from "./components/textStream";
 import Command from "./components/command";
 
-import Sproducts from "./components/Sproducts";
+import Sproducts from "./components/burberryproducts";
 
 // Going to use Buns embedded DB for session info, just for testing, for production, use mongo/cosmos!
 const memorydb = new Database(":memory:");
@@ -61,14 +61,24 @@ const explore = async (session : Cookie<any>, partition_key: string, type: 'Cate
     return <Products categories={category_or_products} imageBaseUrl={imageBaseUrl}/>
 }
 
-const roastExplore = async (partition_key: string) => {
+const beachExplore = async (partition_key: string) => {
     const db = await getDb();
     console.log (`/explore got partition_key ${partition_key}`)
     const products = await db.collection('products').find({partition_key, type: 'Product'}).toArray() as unknown as Array<ProductOrCategory>
     const categories = await db.collection('products').find({partition_key, type: 'Category'}).toArray() as unknown as Array<ProductOrCategory>
     // wait for 500mS
     await new Promise(r => setTimeout(r, 500))
-    return <Sproducts recipes={categories} rheading="Great, try one of our recipes" products={products} imageBaseUrl={imageBaseUrl}/>
+    return <Sproducts recipes={categories} rheading="Great, pick from one of the ocassions" products={products} imageBaseUrl={imageBaseUrl}/>
+}
+
+const datenightExplore = async (partition_key: string) => {
+    const db = await getDb();
+    console.log (`/explore got partition_key ${partition_key}`)
+    const products = await db.collection('products').find({partition_key, type: 'Product'}).toArray() as unknown as Array<ProductOrCategory>
+    const categories = await db.collection('products').find({partition_key, type: 'Category'}).toArray() as unknown as Array<ProductOrCategory>
+    // wait for 500mS
+    await new Promise(r => setTimeout(r, 500))
+    return <Sproducts recipes={categories} rheading="Great, pick from one of the occasions" products={products} imageBaseUrl={imageBaseUrl}/>
 }
 
 
@@ -184,21 +194,21 @@ const app = new Elysia()
     .get('/suggestions', ({store: {tenant}}) =>
         <TxtResponse assistantMessage={
         <div>
-        <h1>Welcome to Hey Sainsbury's</h1>
-        <div>Your AI assistant here to help you find whatever you are looking for.  Tell me what you are looking for below, on start with one of these examples:
+        <h1>Welcome to Burberry</h1>
+        <div>We are your AI assistant to help you find the best outfits for any occasions.  Tell me what you are looking for below, on start with one of these examples:
         <div class="flex flex-row flex-wrap gap-5 my-5">
         
-            <div class="card bg-base-100 shadow-xl basis-70 cursor-pointer"  hx-get="/explore/roast" hx-swap="beforebegin show:bottom" hx-target="#messages">
+            <div class="card bg-base-100 shadow-xl basis-70 cursor-pointer"  hx-get="/explore/beach" hx-swap="beforebegin show:bottom" hx-target="#messages">
                 <div class="card-body">
-                    <h2 class="card-title text-[#E55000]">Create a Sunday Roast</h2>
-                    <p class="text-sm">Help me to pre-prepare for the Inlaws</p>
+                    <h2 class="card-title text-[#B8A081]">Stepping Out in Style</h2>
+                    <p class="text-sm">Your Guide to Dazzling Dress Codes for Every Major Milestone!</p>
                 </div>
             </div>
 
             <div  class="card bg-base-100 shadow-xl basis-70">
                 <div class="card-body">
-                    <h2 class="card-title text-[#E55000]">Lunch box fillers</h2>
-                    <p class="text-sm">One thing less to think about in the morning</p>
+                    <h2 class="card-title text-[#B8A081]">Double the Glamour</h2>
+                    <p class="text-sm">Twinning in Style for Twice the Impact!</p>
                 </div>
             </div>
 
@@ -214,10 +224,13 @@ const app = new Elysia()
         await explore(session, partition_key, 'Category')
     )
     .get('/explore/:category', async ({ cookie: { session }, store: { partition_key}, params: { category } }) =>
-        category === 'roast' ? 
-            await roastExplore(partition_key) 
-            :
-            await explore(session, partition_key, 'Product', category)
+    category === 'datenight' ? 
+        await datenightExplore(partition_key) 
+    :
+    category === 'beach' ?
+        await beachExplore(partition_key)
+    :
+        await explore(session, partition_key, 'Product', category)
     )
     .get('/details/:pid', ({ store: { tenant}, params: { pid } }) =>
        <TxtResponse assistantMessage={<div>Will someone hurry up and implement this feature please!</div>} assistantImageSrc={getImageSrc(tenant.assistantImage)}/>
@@ -276,9 +289,12 @@ const app = new Elysia()
 
         // Call Prompt Flow, response
         
-        if (body.question?.includes('roast')) {
+        if (body.question?.includes('beach' ) || body.question?.includes('summer') || body.question?.includes('hot') || body.question?.includes('sexy')) {
             // customer specific
-            return roastExplore(partition_key)
+            return beachExplore(partition_key)
+        } else if (body.question?.includes('date') || body.question?.includes('classy') || body.question?.includes('elegant')) {
+            // customer specific
+            return datenightExplore(partition_key)
         } else {
             const scrollWorkaround = { 'hx-on:htmx:sse-message' : `document.getElementById('messages').scrollIntoView(false)`}
             return <TxtResponse assistantMessage={
@@ -287,7 +303,7 @@ const app = new Elysia()
                     <div style="width: fit-content;" id={`stream${chatid}`}></div>
                 </div>
             } assistantImageSrc={getImageSrc(tenant.assistantImage)}/> 
-        }   
+        } 
         
       }, {
         body: t.Object({

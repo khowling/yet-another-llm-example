@@ -4,7 +4,7 @@ export default ({assistantMessage, assistantImageSrc}: {assistantMessage : JSX.E
         
 
         <div class="gap-x-0 chat chat-start" >
-            <div class="chat-bubble bg-[#FEF5F0] text-black">{assistantMessage}</div>
+            <div class="chat-bubble bg-[#B8A081] text-black">{assistantMessage}</div>
         </div>
     </div>
 

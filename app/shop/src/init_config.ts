@@ -68,11 +68,12 @@ export type Images = {
     url?: any 
 }
 
+// editted type for Burberry
 export type ProductOrCategory = {
     _id: ObjectId,
     creation?: number,
     partition_key?: string,
-    type: "Product" | "Category",
+    type: "Product" | "Category" ,
     heading: string,
     description: string,
     category_id?: string,
