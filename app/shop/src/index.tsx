@@ -200,14 +200,14 @@ const app = new Elysia()
         
             <div class="card bg-base-100 shadow-xl basis-70 cursor-pointer"  hx-get="/explore/beach" hx-swap="beforebegin show:bottom" hx-target="#messages">
                 <div class="card-body">
-                    <h2 class="card-title text-[#B8A081]">Stepping Out in Style</h2>
+                    <h2 class="card-title text-[#0006CF]">Stepping Out in Style</h2>
                     <p class="text-sm">Your Guide to Dazzling Dress Codes for Every Major Milestone!</p>
                 </div>
             </div>
 
             <div  class="card bg-base-100 shadow-xl basis-70">
                 <div class="card-body">
-                    <h2 class="card-title text-[#B8A081]">Double the Glamour</h2>
+                    <h2 class="card-title text-[#0006CF]">Double the Glamour</h2>
                     <p class="text-sm">Twinning in Style for Twice the Impact!</p>
                 </div>
             </div>
@@ -289,13 +289,13 @@ const app = new Elysia()
 
         // Call Prompt Flow, response
         
-        if (body.question?.includes('beach' ) || body.question?.includes('summer') || body.question?.includes('hot') || body.question?.includes('sexy')) {
-            // customer specific
-            return beachExplore(partition_key)
-        } else if (body.question?.includes('date') || body.question?.includes('classy') || body.question?.includes('elegant')) {
-            // customer specific
-            return datenightExplore(partition_key)
-        } else {
+        // if (body.question?.includes('beach' ) || body.question?.includes('summer') || body.question?.includes('hot') || body.question?.includes('sexy')) {
+        //     // customer specific
+        //     return beachExplore(partition_key)
+        // } else if (body.question?.includes('date') || body.question?.includes('classy') || body.question?.includes('elegant')) {
+        //     // customer specific
+        //     return datenightExplore(partition_key)
+        // } else {
             const scrollWorkaround = { 'hx-on:htmx:sse-message' : `document.getElementById('messages').scrollIntoView(false)`}
             return <TxtResponse assistantMessage={
                 <div id={`sse-response${chatid}`} hx-ext="sse" sse-connect={`/api/chat/completion/${chatid}`} sse-swap={chatid} hx-swap="innerHTML" hx-target={`find #stream${chatid}`} {...scrollWorkaround}>
@@ -303,7 +303,7 @@ const app = new Elysia()
                     <div style="width: fit-content;" id={`stream${chatid}`}></div>
                 </div>
             } assistantImageSrc={getImageSrc(tenant.assistantImage)}/> 
-        } 
+        // } 
         
       }, {
         body: t.Object({

@@ -9,7 +9,7 @@ export default ({recipes, rheading, products, imageBaseUrl}: {recipes :  Array<P
         
 
 <div class="gap-x-0 chat chat-start" >
-    <div class="chat-bubble bg-[#B8A081] text-black">
+    <div class="chat-bubble bg-[#f8f9fa] text-black">
 
         <h1>{rheading}</h1>
         <div class="flex flex-row flex-wrap gap-5 my-5">
