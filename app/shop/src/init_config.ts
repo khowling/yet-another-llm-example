@@ -87,6 +87,9 @@ export type TenantDefinition = {
     assistantName: string,
     assistantImage: Images
     assistantGrounding: string,
+    assistantTemperature: number,
+    productsAre: string,
+    categoriesAre: string,
     image: Images
 }
 

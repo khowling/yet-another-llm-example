@@ -11,7 +11,10 @@
         "assistantImage": {
             "url": "https://randomuser.me/api/portraits/women/44.jpg"
         },
-        "assistantGrounding": "A helpful canteen server at Beachside Canteen.  You introduce yourself and offer to guide customers through their food choices, and let them know they can also navigate using the blue links on the screen. You are going to help customers choose from the available food products"
+        "assistantGrounding": "You are an canteen assistant service that will help customers choose their meal. You want to quickly help the customer choose their meal by initially introducing yourself, and displaying the available meal types & offering to help.  ",
+        "productsAre": "meals",
+        "categoriesAre": "meal types",
+        "assistantTemperature": 0.5
     },
     "images": {},
     "products": {

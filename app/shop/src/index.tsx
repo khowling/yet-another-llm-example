@@ -73,6 +73,8 @@ const app = new Elysia()
     .state('tenant', {} as TenantDefinition)
     .state('partition_key', '' as string)
     .state('initial_system_message', '' as string)
+    .state('products_key', '' as string)
+    .state('categories_key', '' as string)
     .use(html())
     .get('/load-catalogue', ({ query: {f}, cookie: { session }}) => {
         session.remove()
@@ -90,6 +92,8 @@ const app = new Elysia()
         log('Removing existing app store tenant info...')
         store.tenant = {} as TenantDefinition
         store.partition_key = ''
+        store.products_key = ''
+        store.categories_key = ''
         store.initial_system_message = ''
         
         try {
@@ -146,17 +150,20 @@ const app = new Elysia()
                 store.partition_key = tenant.partition_key
                 console.log (`Storing tenant, partition_key & system message: (partition_key=${store.partition_key})`)
 
+                store.products_key = tenant.productsAre.replaceAll(' ', '_') + '_ids'
+                store.categories_key = tenant.categoriesAre.replaceAll(' ', '_') + '_ids'
+
                 const cat_prods = await db.collection('products').find({ partition_key: store.partition_key }).toArray() as unknown as Array<ProductOrCategory>,
                       products = cat_prods.filter(p => p.type === 'Product').map(p => {return {"_id": p._id, "name": p.heading, "description": p.description}}),
-                      categories = cat_prods.filter(c => c.type === 'Category').map(c => {return {"_id": c._id, "name": c.heading, "cat_prods": cat_prods.filter(p => p.type === 'Product' && c._id.equals(p.category_id)).map(p => p._id)}})
+                      categories = cat_prods.filter(c => c.type === 'Category').map(c => {return {"_id": c._id, "name": c.heading, [store.products_key]: cat_prods.filter(p => p.type === 'Product' && c._id.equals(p.category_id)).map(p => p._id)}})
                 
-                store.initial_system_message = 'You are an canteen assistant service that will help customers choose their meal from a list of available menu. ' +
-                    'The meals available on the menu are in this JSON array: ' + JSON.stringify(products) + '. ' +
-                    'To help customers choose their meals, they are grouped into meal types. The meal types and their associated meals are in this JSON array: ' + JSON.stringify(categories) + '. ' +
-                    'You want to quickly help the customer choose their meal by initially introducing yourself, and listing the available meal types & offering to help.  ' +
-                    'When you display meal types, respond strictly with a json format array with meal type _id\'s in the following format ' + JSON.stringify({"types": categories.map(c => c._id)}) + ', and explain why to selected them. ' +
-                    'When you display meals, respond strictly with a json format array with  meal _id\'s in the following format ' + JSON.stringify({"cat_prods":categories[0].cat_prods}) + ', and explain why to selected them. ' +
-                    'When you ask the customer for their choice, don\'t use _ids. ' 
+                store.initial_system_message = 
+                    tenant.assistantGrounding +
+                    `The ${tenant.productsAre} available are in this JSON array: ${JSON.stringify(products)}. ` +
+                    `To help customers choose their ${tenant.productsAre}, they are grouped into ${tenant.categoriesAre}. The ${tenant.categoriesAre} and their associated ${tenant.productsAre} are in this JSON array: ${JSON.stringify(categories)}. ` +
+                    `When you display ${tenant.categoriesAre}, respond strictly with a json format array with ${tenant.categoriesAre} _id\'s in the following format ${JSON.stringify({[store.categories_key]: categories.map(c => c._id)})}. ` +
+                    `When you display ${tenant.productsAre}, respond strictly with a json format array with  ${tenant.productsAre} _id\'s in the following format ${JSON.stringify({[store.products_key]:categories[0][store.products_key]})}. ` //+
+                    //`When you ask the customer for their choice, don\'t use _ids. ` 
 
             }
 
@@ -243,14 +250,14 @@ const app = new Elysia()
             question: t.String()
         })
     })
-    .get('/api/chat/completion/:chatid', async ({params: { chatid }, store: { initial_system_message, partition_key }, cookie: { session}}) => new Stream(async (stream) => {
+    .get('/api/chat/completion/:chatid', async ({params: { chatid }, store: { tenant, initial_system_message, partition_key, categories_key, products_key }, cookie: { session}}) => new Stream(async (stream) => {
 
         try {
 
             if (!process.env.AISHOP_OPENAI_MODELNAME) throw new Error('AISHOP_OPENAI_MODELNAME not set')
             const prompt_history = [{role: "system", content: initial_system_message}, ...listPromptHistory.all({$sessionid: session.value})] as Array<ChatRequestMessage>
 
-            const events = await aiclient.streamChatCompletions(process.env.AISHOP_OPENAI_MODELNAME as string, prompt_history, { maxTokens: 512, temperature: 0.2 });
+            const events = await aiclient.streamChatCompletions(process.env.AISHOP_OPENAI_MODELNAME as string, prompt_history, { maxTokens: 512, temperature: tenant.assistantTemperature || 0.5});
 
             let response = '', log_response = '';
             let isopencode = false;
@@ -287,12 +294,11 @@ const app = new Elysia()
                                 const jsonstr = jsonbuffer.substring(0, jsonclosematch.index + 1)
                                 console.write (`JSON::${jsonstr}::JSON`)
                                 const jout = JSON.parse(jsonstr)
-                                if (jout.types || jout.cat_prods) {
+                                if (jout[categories_key] || jout[products_key]) {
                                     const db = await getDb();
-                                    const category_or_products = await db.collection('products').find({partition_key, _id: {$in: [...(jout.types? jout.types : []), ...(jout.cat_prods? jout.cat_prods : [])].map((v: string)  => new ObjectId(v))}}).toArray() as unknown as Array<ProductOrCategory>
-                                    response += <Products categories={category_or_products} imageBaseUrl={imageBaseUrl}/>
+                                    const category_or_products = await db.collection('products').find({partition_key, _id: {$in: [...(jout[categories_key]? jout[categories_key] : []), ...(jout[products_key]? jout[products_key] : [])].map((v: string)  => new ObjectId(v))}}).toArray() as unknown as Array<ProductOrCategory>
+                                    response += <Products categories={category_or_products} imageBaseUrl={imageBaseUrl} size="S"/>
                                 }
-
 
 
                                 response += jsonbuffer.substring(jsonclosematch.index + 1)
