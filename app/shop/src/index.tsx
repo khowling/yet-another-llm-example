@@ -172,8 +172,11 @@ const app = new Elysia()
                 store.initial_system_message = 
                     `Your name is ${tenant.assistantName}. ` +
                     tenant.assistantGrounding + '. ' +
-                    'Your only here to help your customers select between these items: ' + cat_prods.filter(c => c.type === 'Category').map (c => `In the Category name "${c.heading}" (ID "${c._id}"), we have ${cat_prods.filter(p => p.type === "Product" && c._id.equals(p.category_id) ).map(p => `"${p.heading}"`).join(', ')}`).join('. ') + '. ' +
+                    'You’re only here to recommend your customers outfits for different occasions: ' + cat_prods.filter(c => c.type === 'Category').map (c => `These are the occasions we have: "${c.heading}" (ID "${c._id}"), we have ${cat_prods.filter(p => p.type === "Product" && c._id.equals(p.category_id) ).map(p => `"${p.heading}"`).join(', ')}`).join('. ') + '. ' +
                     'Instead of using the Category name or ID directly in your response, use this HTML format instead: ' + <Command command='/explore'subcommand="EXAMPLECATEGORY" args={new ObjectId(123)}/> + ', replacing EXAMPLECATEGORY with the actual category name and "' + new ObjectId(123) + '" with its ID.'
+                    
+                    // 'Your only here to help your customers select between these items: ' + cat_prods.filter(c => c.type === 'Category').map (c => `In the Category name "${c.heading}" (ID "${c._id}"), we have ${cat_prods.filter(p => p.type === "Product" && c._id.equals(p.category_id) ).map(p => `"${p.heading}"`).join(', ')}`).join('. ') + '. ' +
+                    // 'Instead of using the Category name or ID directly in your response, use this HTML format instead: ' + <Command command='/explore'subcommand="EXAMPLECATEGORY" args={new ObjectId(123)}/> + ', replacing EXAMPLECATEGORY with the actual category name and "' + new ObjectId(123) + '" with its ID.'
 
             }
 
@@ -198,7 +201,7 @@ const app = new Elysia()
         <div>We are your AI assistant to help you find the best outfits for any occasions.  Tell me what you are looking for below, on start with one of these examples:
         <div class="flex flex-row flex-wrap gap-5 my-5">
         
-            <div class="card bg-base-100 shadow-xl basis-70 cursor-pointer"  hx-get="/explore/beach" hx-swap="beforebegin show:bottom" hx-target="#messages">
+            <div class="card bg-base-100 shadow-xl basis-70 cursor-pointer"  hx-get="/explore" hx-swap="beforebegin show:bottom" hx-target="#messages">
                 <div class="card-body">
                     <h2 class="card-title text-[#0006CF]">Stepping Out in Style</h2>
                     <p class="text-sm">Your Guide to Dazzling Dress Codes for Every Major Milestone!</p>
@@ -359,7 +362,7 @@ const app = new Elysia()
 
             stream.event = `close${chatid}`
             const scrollWorkaround = { 'hx-on:htmx:after-settle' : `document.getElementById('messages').scrollIntoView(false)`}
-            stream.send(<div class="chat-bubble bg-[#FEF5F0] text-black" {...scrollWorkaround}>{response}</div>);
+            stream.send(<div class="chat-bubble bg-[#f8f9fa] text-black" {...scrollWorkaround}>{response}</div>);
             stream.close()
 
         } catch (e: any) {
