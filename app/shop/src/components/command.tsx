@@ -1,8 +1,9 @@
 import { ObjectId } from "mongodb"
+import { type TenantDefinition } from "../init_config"
 
-export default ({command, subcommand, method, args}: {command : string, subcommand?: string, method?: string, args?: ObjectId}) => {
+export default ({tenant, command, subcommand, method, args}: {tenant: TenantDefinition , command : string, subcommand?: string, method?: string, args?: ObjectId}) => {
     const spanAttributes = {
-        "class": subcommand? "btn h-auto  border-primary bg-base-100 p-1.5 min-h-0" : "btn btn-primary min-h-fit h-auto p-2",
+        "class": subcommand? `btn h-auto  border-[${tenant.buttonColor}] bg-base-100 p-1.5 min-h-0` : `btn bg-[${tenant.buttonColor}] text-white min-h-fit h-auto p-2`,
         [`hx-${method || 'get'}`]: args? command+'/'+args : command,
         "hx-target": "#messages",
         "hx-swap": "beforebegin show:bottom"
@@ -11,7 +12,7 @@ export default ({command, subcommand, method, args}: {command : string, subcomma
 
     return (
         <span {...spanAttributes}>
-            <span class="btn btn-primary min-h-fit h-auto p-1" >{command}</span>
+            <span class={`btn bg-[${tenant.buttonColor}] text-white min-h-fit h-auto p-1`} >{command}</span>
             <span>{subcommand}</span>
         </span>
     )

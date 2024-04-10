@@ -47,7 +47,7 @@ export const getDb = async () => {
 }
 
 
-const explore = async (session : Cookie<any>, partition_key: string, type: 'Category' | 'Product', category?: string) => {
+const explore = async (session : Cookie<any>, tenant: TenantDefinition, partition_key: string, type: 'Category' | 'Product', category?: string) => {
     const db = await getDb();
     console.log (`/explore got partition_key ${partition_key}`)
     const category_or_products = await db.collection('products').find({partition_key, type, ...(category && {category_id: new ObjectId(category)})}).toArray() as unknown as Array<ProductOrCategory>
@@ -59,7 +59,7 @@ const explore = async (session : Cookie<any>, partition_key: string, type: 'Cate
         $content: "Your customer is now looking at the products " + category_or_products.map(p => `"${p.heading}"`).join(' and ')
     })
    
-    return <Products categories={category_or_products} imageBaseUrl={imageBaseUrl} size="L"/>
+    return <Products tenant={tenant} categories={category_or_products} imageBaseUrl={imageBaseUrl} size="L"/>
 }
 
 const imageBaseUrl = '/file' // process.env.AISHOP_STORAGE_ACCOUNT ? `https://${process.env.AISHOP_STORAGE_ACCOUNT}.blob.core.windows.net/${process.env.AISHOP_IMAGE_CONTAINER}` : `https://127.0.0.1:10000/devstoreaccount1/${process.env.AISHOP_IMAGE_CONTAINER}`
@@ -186,20 +186,20 @@ const app = new Elysia()
     .get('/welcome', async ({cookie: { session }, store: {tenant, partition_key}}) => 
         <div>
             <Welcome tenant={tenant} imageBaseUrl={imageBaseUrl}/>
-            { await explore(session, partition_key, 'Category') }
+            { await explore(session, tenant, partition_key, 'Category') }
         </div>
     )
     .get('/suggestions', ({store: {tenant}}) =>
         <TxtResponse assistantMessage={<Suggestions welcomeMessage={tenant.welcomeMessage}/>} assistantImageSrc={getImageSrc(tenant.assistantImage)}/>
     )
     .get('/help', ({store: {tenant}}) =>
-        <TxtResponse assistantMessage={<div>Hi, Im {tenant.assistantName}, your assistant, type <Command command='/explore'/> or <Command command='/cart'/>  at any time. or... just chat to me, I can be very helpful</div>} assistantImageSrc={getImageSrc(tenant.assistantImage)}/>
+        <TxtResponse assistantMessage={<div>Hi, Im {tenant.assistantName}, your assistant, type <Command tenant={tenant} command='/explore'/> or <Command tenant={tenant} command='/cart'/>  at any time. or... just chat to me, I can be very helpful</div>} assistantImageSrc={getImageSrc(tenant.assistantImage)}/>
     )
-    .get('/explore', async ({cookie: { session }, store: { partition_key}}) => 
-        await explore(session, partition_key, 'Category')
+    .get('/explore', async ({cookie: { session }, store: { tenant, partition_key}}) => 
+        await explore(session, tenant, partition_key, 'Category')
     )
-    .get('/explore/:category', async ({ cookie: { session }, store: { partition_key}, params: { category } }) =>
-        await explore(session, partition_key, 'Product', category)
+    .get('/explore/:category', async ({ cookie: { session }, store: { tenant, partition_key}, params: { category } }) =>
+        await explore(session, tenant, partition_key, 'Product', category)
     )
     .get('/details/:pid', ({ store: { tenant}, params: { pid } }) =>
        <TxtResponse assistantMessage={<div>Will someone hurry up and implement this feature please!</div>} assistantImageSrc={getImageSrc(tenant.assistantImage)}/>
@@ -224,17 +224,17 @@ const app = new Elysia()
           const db = await getDb();
           const product = await db.collection('products').findOne({ partition_key, _id: new ObjectId(productid)})
           newCartItem.run({$sessionid: session.value, $productid: productid, $heading: product?.heading, $qty: 1})
-          return <TxtResponse assistantMessage={<div>{product?.heading} added to your cart, click <Command command='/cart'/> to view</div>} assistantImageSrc={getImageSrc(tenant.assistantImage)}/>
+          return <TxtResponse assistantMessage={<div>{product?.heading} added to your cart, click <Command tenant={tenant} command='/cart'/> to view</div>} assistantImageSrc={getImageSrc(tenant.assistantImage)}/>
           
         } catch (error: any) {
           set.status = 500
           return error
         }
       })
-      .get('/cart', async ({set, cookie: { session }}) => {
+      .get('/cart', async ({set, cookie: { session }, store: { tenant },}) => {
         try {
             const cart = listCart.all({$sessionid: session.value})
-            return <Cart cart={cart} />
+            return <Cart tenant={tenant} cart={cart} />
         } catch (error: any) {
             set.status = 500
             return error
@@ -309,7 +309,7 @@ const app = new Elysia()
                                 if (jout[categories_key] || jout[products_key]) {
                                     const db = await getDb();
                                     const category_or_products = await db.collection('products').find({partition_key, _id: {$in: [...(jout[categories_key]? jout[categories_key] : []), ...(jout[products_key]? jout[products_key] : [])].map((v: string)  => new ObjectId(v))}}).toArray() as unknown as Array<ProductOrCategory>
-                                    response += <Products categories={category_or_products} imageBaseUrl={imageBaseUrl} size="M"/>
+                                    response += <Products tenant={tenant} categories={category_or_products} imageBaseUrl={imageBaseUrl} size="M"/>
                                 }
 
 

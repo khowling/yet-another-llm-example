@@ -8,6 +8,7 @@
         },
         "description": "We are a food ordering app that allows you to order food from a variety of restaurants and cuisines",
         "initialContent": "/welcome",
+        "buttonColor": "#0000FF",
         "assistantName": "Debbie",
         "assistantImage": {
             "url": "https://randomuser.me/api/portraits/women/44.jpg"

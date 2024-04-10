@@ -32,7 +32,7 @@ const Header = ({tenant, imageBaseUrl}: {tenant : TenantDefinition, imageBaseUrl
                 <span class="font-bold text-lg">Items</span>
                 <span class="text-info">Subtotal: £</span>
                 <div class="card-actions">
-                    <Command command='/cart'/>
+                    <Command tenant={tenant} command='/cart'/>
                 
                 </div>
                 </div>
@@ -109,16 +109,16 @@ export default ({tenant, imageBaseUrl}: {tenant : TenantDefinition, imageBaseUrl
                                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
                                 </svg>
                             </div>
-                            <input  id="question" name="question" type="text" class="block w-full p-4 ps-10 leading-5 rounded-full border input-bordered focus:outline-none  focus:border-primary focus:border-2 font-semibold" placeholder="For help, type /help" />
-                            <button type="button" class="absolute end-5 bottom-2.5 btn btn-primary !bg-blue-600 min-h-fit h-auto p-2" hx-trigger="click" hx-get="/help" hx-target="#messages" hx-swap="beforebegin show:bottom">/help</button>
+                            <input  id="question" name="question" type="text" class={`block w-full p-4 ps-10 leading-5 rounded-full border-[${tenant.buttonColor}] border input-bordered focus:outline-none  focus:border-primary focus:border-2 font-semibold`} placeholder="For help, type /help" />
+                            <button type="button" class={`absolute end-5 bottom-2.5 btn btn-primary bg-[${tenant.buttonColor}] min-h-fit h-auto p-2`} hx-trigger="click" hx-get="/help" hx-target="#messages" hx-swap="beforebegin show:bottom">/help</button>
                         
 
                             <div id="cmd-dropdown" class="invisible transition transition-opacity duration-300 absolute left-8 bottom-16 z-10 mt-2 w-4/5 p-2 origin-bottom-left rounded-md bg-base-100 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
                                 <div class="py-1" role="none">
-                                <div class="ml-4 my-2"><Command command='/help'/><b>to see what you can do</b></div>
-                                <div class="ml-4 my-2"><Command command='/cart'/><b>to open your cart</b></div>
-                                <div class="ml-4  my-2"><Command command='/recommend'/><b>whats good today?</b></div>
-                                <div class="ml-4  my-2"><Command command='/allergies'/><b>let us help</b></div>
+                                <div class="ml-4 my-2"><Command  tenant={tenant} command='/help'/><b>to see what you can do</b></div>
+                                <div class="ml-4 my-2"><Command  tenant={tenant} command='/cart'/><b>to open your cart</b></div>
+                                <div class="ml-4  my-2"><Command  tenant={tenant} command='/recommend'/><b>whats good today?</b></div>
+                                <div class="ml-4  my-2"><Command  tenant={tenant} command='/allergies'/><b>let us help</b></div>
                                 </div>
                             </div>
 

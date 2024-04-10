@@ -1,6 +1,7 @@
+import { type TenantDefinition } from "../init_config";
 import Command from "./command";
 
-export default ({cart}: {cart :  Array<any>}) =>
+export default ({tenant, cart}: {tenant: TenantDefinition , cart :  Array<any>}) =>
     <div class="card card-side bg-base-100 shadow-xl my-5 sm:w-2/3">
         <figure><img class="w-48" src="public/images/basket.jpg" alt="Movie"/></figure>
         <div class="card-body">
@@ -21,8 +22,8 @@ export default ({cart}: {cart :  Array<any>}) =>
             </table>
 
             <div class="card-actions justify-end">
-                <Command command='/explore'/>
-                <Command command='/checkout'/>
+                <Command tenant={tenant} command='/explore'/>
+                <Command tenant={tenant} command='/checkout'/>
             </div>
         </div>
     </div>

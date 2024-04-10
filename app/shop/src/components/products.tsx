@@ -1,8 +1,8 @@
 
-import { ProductOrCategory } from '../init_config'
+import { ProductOrCategory, type TenantDefinition } from '../init_config'
 import Command from './command'
 
-export default ({categories, imageBaseUrl, size = 'M'}: {categories :  Array<ProductOrCategory>, imageBaseUrl : string, size?: 'S' | 'M' | 'L'}) =>  
+export default ({tenant, categories, imageBaseUrl, size = 'M'}: {tenant: TenantDefinition, categories :  Array<ProductOrCategory>, imageBaseUrl : string, size?: 'S' | 'M' | 'L'}) =>  
 
     <div class="flex flex-row flex-wrap gap-5 my-5">
         { categories.map((c, i) => 
@@ -19,10 +19,10 @@ export default ({categories, imageBaseUrl, size = 'M'}: {categories :  Array<Pro
                 }
                 <div class="card-actions justify-end">
                     { c.type === 'Category' ?
-                        <Command command='/explore'subcommand={c.heading} args={c._id}/>
+                        <Command  tenant={tenant} command='/explore'subcommand={c.heading} args={c._id}/>
                        : [
-                        <Command method='post' command='/add' args={c._id}/>,
-                        <Command command='/details'  args={c._id}/>
+                        <Command  tenant={tenant} method='post' command='/add' args={c._id}/>,
+                        <Command  tenant={tenant} command='/details'  args={c._id}/>
                        ]
 
                     }
