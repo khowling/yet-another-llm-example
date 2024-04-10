@@ -14,6 +14,8 @@ import Cart from "./components/cart";
 //import Llm from "./components/llm";
 import TextStream from "./components/textStream";
 import Command from "./components/command";
+import Suggestions from "./components/suggestions";
+import Welcome from "./components/welcome";
 
 
 // Going to use Buns embedded DB for session info, just for testing, for production, use mongo/cosmos!
@@ -57,7 +59,7 @@ const explore = async (session : Cookie<any>, partition_key: string, type: 'Cate
         $content: "Your customer is now looking at the products " + category_or_products.map(p => `"${p.heading}"`).join(' and ')
     })
    
-    return <Products categories={category_or_products} imageBaseUrl={imageBaseUrl}/>
+    return <Products categories={category_or_products} imageBaseUrl={imageBaseUrl} size="L"/>
 }
 
 const imageBaseUrl = '/file' // process.env.AISHOP_STORAGE_ACCOUNT ? `https://${process.env.AISHOP_STORAGE_ACCOUNT}.blob.core.windows.net/${process.env.AISHOP_IMAGE_CONTAINER}` : `https://127.0.0.1:10000/devstoreaccount1/${process.env.AISHOP_IMAGE_CONTAINER}`
@@ -175,12 +177,21 @@ const app = new Elysia()
                 session.value = sessionid
             } 
 
-            return <Index tenant={store.tenant} imageBaseUrl={imageBaseUrl}/>
+            return <Index tenant={store.tenant} imageBaseUrl={imageBaseUrl} />
         } catch (error: any) {
             set.status = 500
             return JSON.stringify(error)
         }
     })
+    .get('/welcome', async ({cookie: { session }, store: {tenant, partition_key}}) => 
+        <div>
+            <Welcome tenant={tenant} imageBaseUrl={imageBaseUrl}/>
+            { await explore(session, partition_key, 'Category') }
+        </div>
+    )
+    .get('/suggestions', ({store: {tenant}}) =>
+        <TxtResponse assistantMessage={<Suggestions welcomeMessage={tenant.welcomeMessage}/>} assistantImageSrc={getImageSrc(tenant.assistantImage)}/>
+    )
     .get('/help', ({store: {tenant}}) =>
         <TxtResponse assistantMessage={<div>Hi, Im {tenant.assistantName}, your assistant, type <Command command='/explore'/> or <Command command='/cart'/>  at any time. or... just chat to me, I can be very helpful</div>} assistantImageSrc={getImageSrc(tenant.assistantImage)}/>
     )
@@ -196,10 +207,11 @@ const app = new Elysia()
     .get('/checkout', ({ store: { tenant}}) =>
        <TxtResponse assistantMessage={<div>Will someone hurry up and implement this feature please!</div>} assistantImageSrc={getImageSrc(tenant.assistantImage)}/>
     )
-    .get('/file/*', async ({ set, params }) => {
+    .get('/file/*', async ({ set, params, store: {tenant, partition_key} }) => {
         const filepath = params['*'];
         try {
-          const blobClient = containerClient.getBlobClient(filepath);
+          const blobPath = `${partition_key}/${filepath}`
+          const blobClient = containerClient.getBlobClient(blobPath);
           const dl = await blobClient.download()
           return new Stream(dl.readableStreamBody)
         } catch (e: any) {
@@ -239,9 +251,9 @@ const app = new Elysia()
         })
         const scrollWorkaround = { 'hx-on:htmx:sse-message' : `document.getElementById('messages').scrollIntoView(false)`}
         return <TxtResponse assistantMessage={
-            <div id={`sse-response${chatid}`} hx-ext="sse" sse-connect={`/api/chat/completion/${chatid}`} sse-swap={chatid} hx-swap="innerHTML" hx-target={`find #stream${chatid}`} {...scrollWorkaround}>
+            <div class="w-full" id={`sse-response${chatid}`} hx-ext="sse" sse-connect={`/api/chat/completion/${chatid}`} sse-swap={chatid} hx-swap="innerHTML" hx-target={`find #stream${chatid}`} {...scrollWorkaround}>
                 <div sse-swap={`close${chatid}`} hx-swap="outerHTML"  hx-target={`closest #sse-response${chatid}`}></div>
-                <div style="width: fit-content;" id={`stream${chatid}`}></div>
+                <div class="w-full" id={`stream${chatid}`}></div>
             </div>
         } assistantImageSrc={getImageSrc(tenant.assistantImage)}/> 
 
@@ -297,7 +309,7 @@ const app = new Elysia()
                                 if (jout[categories_key] || jout[products_key]) {
                                     const db = await getDb();
                                     const category_or_products = await db.collection('products').find({partition_key, _id: {$in: [...(jout[categories_key]? jout[categories_key] : []), ...(jout[products_key]? jout[products_key] : [])].map((v: string)  => new ObjectId(v))}}).toArray() as unknown as Array<ProductOrCategory>
-                                    response += <Products categories={category_or_products} imageBaseUrl={imageBaseUrl} size="S"/>
+                                    response += <Products categories={category_or_products} imageBaseUrl={imageBaseUrl} size="M"/>
                                 }
 
 
@@ -331,13 +343,13 @@ const app = new Elysia()
             newPromptHistory.run({
                 $sessionid: session.value, 
                 $date: Date.now(), 
-                $role: "system", 
+                $role: "user", 
                 $content: log_response
             })
 
             stream.event = `close${chatid}`
             const scrollWorkaround = { 'hx-on:htmx:after-settle' : `document.getElementById('messages').scrollIntoView(false)`}
-            stream.send(<div class="chat-bubble chat-bubble-info" {...scrollWorkaround}>{response}</div>);
+            stream.send(<div class="text-slate-900 w-full" {...scrollWorkaround}>{response}</div>);
             stream.close()
 
         } catch (e: any) {

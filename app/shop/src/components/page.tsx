@@ -5,11 +5,17 @@ import Welcome from './welcome.js'
 import Command from './command.js'
 
 
-const Header = ({tenant}: {tenant : TenantDefinition}) => 
+const Header = ({tenant, imageBaseUrl}: {tenant : TenantDefinition, imageBaseUrl: string}) => 
     <header class="z-1 relative bg-base-100 navbar pt-3">
                         
         <div class="flex-1">
-            <a class="btn btn-ghost text-xl" hx-get="/reset">{tenant.name}</a>
+            <a class="btn btn-ghost text-xl" hx-get="/reset">
+                { tenant.logoImage ? 
+                <img class="h-6" src={`${imageBaseUrl}/${tenant.logoImage.pathname}`}/>
+                :
+                <span>{tenant.name}</span>
+                }
+            </a>
         </div>
 
         <div class="flex-none gap-8 mr-5">
@@ -84,8 +90,7 @@ export default ({tenant, imageBaseUrl}: {tenant : TenantDefinition, imageBaseUrl
     <HTMLPage>
         <div class="absolute h-full w-full flex z-0">
             <div id="chatContainer" class="flex  relative h-full w-full overflow-y-scroll flex-col flex-1 z-0"  >
-                <div id="scroller" class="pt-28 -z-1 sm:px-16" hx-trigger="load" hx-get="/explore" hx-swap="beforebegin show:bottom" hx-target="#messages">
-                <Welcome tenant={tenant} imageBaseUrl={imageBaseUrl}/>
+                <div id="scroller" class="pt-28 -z-1 sm:px-16" hx-trigger="load" hx-get={tenant.initialContent} hx-swap="beforebegin show:bottom" hx-target="#messages">
                 <div class="h-24" id="messages"></div>
                 </div>
             </div>
@@ -124,5 +129,5 @@ export default ({tenant, imageBaseUrl}: {tenant : TenantDefinition, imageBaseUrl
             </div>
             
         </div>
-        <Header tenant={tenant}/>
+        <Header tenant={tenant} imageBaseUrl={imageBaseUrl}/>
     </HTMLPage>

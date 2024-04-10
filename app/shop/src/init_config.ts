@@ -64,40 +64,48 @@ async function writeimages(partition_key : string, images: { [pathname: string]:
 }
 
 export type Images = {
-    pathname?: string, 
-    url?: any 
+    pathname?: string
+    url?: any
 }
 
 export type ProductOrCategory = {
-    _id: ObjectId,
-    creation?: number,
-    partition_key?: string,
-    type: "Product" | "Category",
-    heading: string,
-    description: string,
-    category_id?: string,
+    _id: ObjectId
+    creation?: number
+    partition_key?: string
+    type: "Product" | "Category"
+    heading: string
+    description: string
+    category_id?: string
     image: Images
 }
 
 export type TenantDefinition = {
-    partition_key: string,
-    name: string,
-    welcomeMessage: string,
-    description: string,
-    assistantName: string,
+    partition_key: string
+    name: string
+    welcomeMessage: string
+    welcomeBackground: { 
+        pathname: string 
+    }
+    logoImage: { 
+        pathname: string 
+    }
+    description: string
+    initialContent: string
+    buttonColor: string
+    assistantName: string
     assistantImage: Images
-    assistantGrounding: string,
-    assistantTemperature: number,
-    productsAre: string,
-    categoriesAre: string,
+    assistantGrounding: string
+    assistantTemperature: number
+    productsAre: string
+    categoriesAre: string
     image: Images
 }
 
 export type ConfigData = {
     tenant: TenantDefinition,
-    images: { [pathname: string]: string },
+    images: { [pathname: string]: string }
     products: {
-        Product: Array<ProductOrCategory>,
+        Product: Array<ProductOrCategory>
         Category: Array<ProductOrCategory>
     }
 }
@@ -113,7 +121,7 @@ async function populateTenant(log: (message: string) => void, db: mongoDB.Db, pa
         const newc: ProductOrCategory = { ...c, _id: new_id, partition_key: partition_key, creation: Date.now() }
         if (c.image && c.image.pathname) {
             if (imagemap.has(c.image.pathname)) {
-                newc.image = imagemap.get(c.image.pathname) as { pathname: string}
+                //newc.image = imagemap.get(c.image.pathname) as { pathname: string}
             } else  {
                 log(`ERROR: Cannot find image for Category ${c.heading}:  ${c.image.pathname}`)
             }
@@ -140,7 +148,7 @@ async function populateTenant(log: (message: string) => void, db: mongoDB.Db, pa
         }
         if (p.image && p.image.pathname) {
             if (imagemap.has(p.image.pathname)) {
-                newp.image = imagemap.get(p.image.pathname) as { pathname: string}
+                //newp.image = imagemap.get(p.image.pathname) as { pathname: string}
             } else  {
                 log(`ERROR: Cannot find image for Product ${p.heading}:  ${p.image.pathname}`)
             }
@@ -202,7 +210,7 @@ async function loadBlobImages(log: (message: string) => void, partition_key: str
 
     log(`loadBlobImages: Loading file images...`)
     // loop through the tenant, products, categories, creating the images in blob
-    for (const c of [...catalogData.products.Category, ...catalogData.products.Product, catalogData.tenant]) {
+    for (const c of [...catalogData.products.Category, ...catalogData.products.Product, ...(catalogData.tenant.welcomeBackground ? [{image: catalogData.tenant.welcomeBackground}] : []), ...(catalogData.tenant.logoImage ? [{image: catalogData.tenant.logoImage}] : [])]) {
         if (c.image && c.image.pathname) {
             if (!imagemap.has(c.image.pathname)) {
                 try {
@@ -241,11 +249,11 @@ export async function initCatalog(catalogfile: string, log: (message: string) =>
         log (`Creating tenant... ${catalogData.tenant.name}`)
 
         let tenant = {...catalogData.tenant}
-        if (tenant.image && tenant.image.pathname) {
-            if (imagemap.has(tenant.image.pathname)) {
-                tenant.image = imagemap.get(tenant.image.pathname) as { pathname: string}
+        if (tenant.welcomeBackground && tenant.welcomeBackground.pathname) {
+            if (imagemap.has(tenant.welcomeBackground.pathname)) {
+                //tenant.welcomeBackground = imagemap.get(tenant.welcomeBackground.pathname) as { pathname: string}
             } else {
-                log(`ERROR: Cannot find image for Tenant ${tenant.name}:  ${tenant.image.pathname}`)
+                log(`ERROR: Cannot find image for Tenant ${tenant.name}:  ${tenant.welcomeBackground.pathname}`)
             }
         }
         await db.collection('tenant').deleteMany({})

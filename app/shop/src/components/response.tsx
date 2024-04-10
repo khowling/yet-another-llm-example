@@ -7,8 +7,8 @@ export default ({assistantMessage, assistantImageSrc}: {assistantMessage : JSX.E
             </div>
         </div> 
 
-        <div class="chat chat-start" >
-            <div class="chat-bubble chat-bubble-info">{assistantMessage}</div>
+        <div class="chat chat-start w-full" >
+            <div class="chat-bubble bg-[#f8f9fa] text-slate-900 w-full">{assistantMessage}</div>
         </div>
     </div>
 

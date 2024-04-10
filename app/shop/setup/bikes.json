@@ -3,15 +3,18 @@
         "partition_key": "wheelwise",
         "name": "WheelWise",
         "welcomeMessage": "Welcome to WheelWise",
-        "description": "The bike shop that makes you smarter about bikes",
-        "image": {
+        "welcomeBackground": {
             "pathname": "bike-images/banner.jpg"
         },
+        "description": "The bike shop that makes you smarter about bikes",
         "assistantName": "Scott",
         "assistantImage": {
             "url": "https://randomuser.me/api/portraits/men/41.jpg"
         },
-        "assistantGrounding": "A helpful bike shop assistant working at Wheelwise, here to help customers find the right bike for them."
+        "assistantGrounding": "A helpful bike shop assistant working at Wheelwise, here to help customers find the right bike for them.",
+        "productsAre": "bikes",
+        "categoriesAre": "bike types",
+        "assistantTemperature": 0.5
 
     },
     "images": {

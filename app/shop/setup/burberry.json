@@ -1,0 +1,180 @@
+{
+    "tenant": {
+        "partition_key": "burberry",
+        "name": "burberry",
+        "welcomeMessage": "Welcome to Burberry",
+        "description": "",
+        "logoImage": {
+            "pathname": "burberry-images/logo.png"
+        },
+        "initialContent": "/suggestions",
+        "buttonColor": "#0006CF",
+        "assistantName": "Debbie",
+        "assistantImage": {
+            "url": "https://randomuser.me/api/portraits/women/44.jpg"
+        },
+        "assistantGrounding": "You are a helpful luxury shopping service that will help customers choose clothing for different occasions. You want to quickly help the customer choose their clothing by initially introducing yourself, and displaying the available occasions & offering to help choose clothing.  ",
+        "productsAre": "clothing",
+        "categoriesAre": "occasions",
+        "assistantTemperature": 0.5
+    },
+    "images": {},
+    "products": {
+        "Product": [
+            {
+                "_id": "swimsuit1",
+                "type": "Product",
+                "heading": "Swimsuit",
+                "position": "normal",
+                "category_id": "beach",
+                "description": "A scoop-back swimsuit in stretch nylon, printed with the Burberry Check. Comes with a matching drawstring bag.",
+                "price": 100,
+                "image": {
+                    "pathname": "burberry-images/swimsuit.png"
+                }
+            },
+            {
+                "_id": "bikinitop1",
+                "type": "Product",
+                "heading": "Bikini Top",
+                "position": "normal",
+                "category_id": "beach",
+                "description": "A halterneck bikini top in stretch nylon, printed with the Burberry Check. Comes with a matching drawstring bag.",
+                "price": 150,
+                "image": {
+                    "pathname": "burberry-images/bikini-top.png"
+                }
+            },
+            {
+                "_id": "bikinibriefs1",
+                "type": "Product",
+                "heading": "Bikini Briefs",
+                "position": "normal",
+                "category_id": "beach",
+                "description": "A pair of side-tie bikini briefs in stretch nylon, printed with the Burberry Check.",
+                "price": 120,
+                "image": {
+                    "pathname": "burberry-images/bikini-briefs.png"
+                }
+            },
+            {
+                "_id": "hat1",
+                "type": "Product",
+                "heading": "Bucket Hat",
+                "position": "normal",
+                "category_id": "beach",
+                "description": "A bucket hat made in Italy from a cotton blend, woven with the Burberry Check. The unlined style is appliquéd with the Equestrian Knight Design.",
+                "price": 100,
+                "image": {
+                    "pathname": "burberry-images/hat.png"
+                }             
+            },
+            {
+                "_id": "sunglasses1",
+                "type": "Product",
+                "heading": "Arch Sunglasses",
+                "position": "normal",
+                "category_id": "beach",
+                "description": "A pair of square-frame sunglasses in acetate with sculptural temples. The polished metal hardware is engraved with the Burberry logo and hallmarks..",
+                "price": 350,
+                "image": {
+                    "pathname": "burberry-images/sunglasses.png"
+                }
+            },
+            {
+                "_id": "cap1",
+                "type": "Product",
+                "heading": "Baseball Cap",
+                "position": "normal",
+                "category_id": "beach",
+                "description": "A baseball cap made in Italy from cotton twill woven with the Burberry Check.",
+                "price": 12.50,
+                "image": {
+                    "pathname": "burberry-images/cap.png"
+                }
+            },
+            {
+                "_id": "dress1",
+                "type": "Product",
+                "heading": "Dress",
+                "position": "normal",
+                "category_id": "date-night",
+                "description": "A sleeveless V-neck dress made in Italy from crepe jersey, printed with hand-painted artwork featuring our jewellery and bag hardware. The style is cut to a regular fit with an asymmetric zipped waist and handkerchief hem.",
+                "price": 2250,
+                "image": {
+                    "pathname": "burberry-images/dress.png"
+                }
+            },
+            {
+                "_id": "earrings1",
+                "type": "Product",
+                "heading": "Small Shield Earrings",
+                "position": "normal",
+                "category_id": "date-night",
+                "description": "A pair of earrings made in Italy from sterling silver with gold plating. The style is inspired by the shield in our Equestrian Knight Design.",
+                "price": 250,
+                "image": {
+                    "pathname": "burberry-images/earrings.png"
+                }
+            },
+            {
+                "_id": "heels1",
+                "type": "Product",
+                "heading": "Leather Bay Heels",
+                "position": "normal",
+                "category_id": "date-night",
+                "description": "Heeled sandals made in Italy from calf leather. The wide strap features a shield plaque enamelled with the Equestrian Knight Design.",
+                "price": 1250,
+                "image": {
+                    "pathname": "burberry-images/heels.png"
+                }
+            },
+            {
+                "_id": "bag1",
+                "type": "Product",
+                "heading": "Knight Bag",
+                "position": "normal",
+                "category_id": "date-night",
+                "description": "A softly structured bag made in Italy from nylon, printed with a hand-painted artwork featuring our jewellery and bag hardware. The clip is a play on the Equestrian Knight Design and can be reattached to adjust the shape from a shoulder bag to tote.",
+                "price": 1550,
+                "image": {
+                    "pathname": "burberry-images/bag.png"
+                }
+            },
+            {
+                "_id": "coat1",
+                "type": "Product",
+                "heading": "Long Silk Trench Coat",
+                "position": "normal",
+                "category_id": "date-night",
+                "description": "A lightweight trench coat in an Italian-woven silk blend. Tailored to a regular fit with set-in sleeves and exaggerated epaulettes. The B buckle belt can be worn at three different heights to adjust the silhouette from a low to mid or high waist.",
+                "price": 3250,
+                "image": {
+                    "pathname": "burberry-images/coat.png"
+                }
+            }
+        ],
+        "Category": [
+            {
+                "_id": "beach",
+                "type": "Category",
+                "heading": "Beach",
+                "position": "hero",
+                "description": "Embrace the sun-kissed shores with our exquisite beachwear collection. Each piece is a blend of comfort and style, designed to enhance your seaside allure.",
+                "image": {
+                    "pathname": "burberry-images/beach.jpg"
+                }
+            },
+            {
+                "_id": "date-night",
+                "type": "Category",
+                "heading": "Date Night",
+                "position": "hero",
+                "description": "Step into the night with an ensemble that whispers romance and sophistication. Our date night collection offers a curated selection of outfits that blend timeless elegance with a touch of modern flair.",
+                "image": {
+                    "pathname": "burberry-images/datenight.jpg"
+                }
+            }
+        ]
+    }
+}
